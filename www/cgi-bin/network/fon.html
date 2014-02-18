@@ -10,9 +10,9 @@ cat<<EOF
 </P>
 <TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
 <TR
-TITLE="Fixer le BSSID (par exemple '00:18:84:d0:08:7d') pour que FON prend en compte le HOTSPOT.">
+TITLE="Fixer le nom du reseau WiFi (SSID)">
 <TD>ESSID&nbsp;:</TD>
-<TD><INPUT NAME="network.hotspot.macaddr" SIZE="48" TYPE="TEXT" VALUE="$(uci get network.hotspot.macaddr)"></TD>
+<TD><INPUT NAME="wireless.@wifi-iface[1].ssid" SIZE="48" TYPE="TEXT" VALUE="$(uci get wireless.@wifi-iface[1].ssid)"></TD>
 </TR>
 <TR
 TITLE="Entrer un numéro de canal entre 1 et 13. Dans certains pays (USA) les canaux 12 et 13 sont interdits. Le Japon peut utiliser aussi le canal 14.">

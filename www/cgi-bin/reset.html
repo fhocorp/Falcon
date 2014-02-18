@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="01.08.2013";SCRIPT=${0#/rom}
+export DATE="17.01.2008";SCRIPT=${0#/rom}
 export TITLE="Administration&nbsp;: Red&eacute;marrage"
 . ${SCRIPT%/*}/cgi-bin-pre.sh
 
@@ -96,7 +96,7 @@ cat<<EOF
 </TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
 
-if [ "$(uci get boot_wait)" != "on" ]; then
+if [ "$(nvram get boot_wait)" != "on" ]; then
 
 cat<<EOF
 <P><B>Veuillez
@@ -133,7 +133,7 @@ DIRTY=1
 nvram set $V="$C"
 fi
 done
-test -n "$DIRTY" && uci commit>/dev/null 2>&1
+test -n "$DIRTY" && nvram commit>/dev/null 2>&1
 fi
 
 cat<<EOF
@@ -179,7 +179,7 @@ cat<<EOF
 ALT="51 secondes..."
 HEIGHT="8" SRC="../images/progress51.gif" VSPACE="10" WIDTH="255" TITLE="51 secondes...">
 <SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
-setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(uci get network.lan.ipaddr)/':'/')", 51000);
+setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 51000);
 //--></SCRIPT>
 EOF
 

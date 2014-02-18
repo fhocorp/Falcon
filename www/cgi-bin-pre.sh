@@ -1,12 +1,11 @@
 #!/bin/sh
-_uptime="$(uptime)"
-_loadavg="${_uptime#*load average: }"
-_uptime="${_uptime#*up }"
-_uptime="${_uptime%%,*}"
+_uptime=$(uptime)
+_loadavg=${_uptime#*load average: }
+_uptime=${_uptime#*up }
+_uptime=${_uptime%%,*}
 _hostname=$(cat /proc/sys/kernel/hostname)
-_version=$( grep "Polaris" /etc/version )
-_version="${_version%% ---*}"
-
+_version=$(cat /etc/version)
+_connexion3g=$(/sbin/ifconfig 3g-mobile | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
 echo Content-type: text/html
 echo
 
@@ -60,7 +59,7 @@ document.onkeypress = help;
 		<ul>
 			<li><strong>Host Name:</strong> $_hostname</li>
 			<li><strong>Uptime:</strong> $_uptime</li>
-			<li><strong>Charge syst&egrave;me:</strong> $_loadavg</li>
+			<li><strong>Adresse IP:</strong> $_connexion3g</li>
 			<li><strong>Version:</strong> $_version</li>
 		</ul>
 	</div>

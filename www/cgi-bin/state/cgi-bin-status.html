@@ -1,12 +1,12 @@
 #!/bin/sh
 
-export DATE="01.08.2013";SCRIPT=${0#/rom}
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
 export TITLE="Status&nbsp;:
 OLSR"
 . ${SCRIPT%/*}/cgi-bin-pre.sh
 
 WLDEV=$(l=$(grep : /proc/net/wireless);l=${l%:*};echo ${l##* })
-ff_httpinfo=$(uci get ff_httpinfo)
+ff_httpinfo=$(nvram get ff_httpinfo)
 if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
 fi
@@ -21,7 +21,7 @@ OLSR</H1>
 <TD><INPUT NAME="post_overview" TITLE="Affiche un aperçu des propriétés générales du point d'accès" TYPE="SUBMIT" VALUE="Aperçu">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_route" TITLE="Affiche la table de routage courante du point d'accès" TYPE="SUBMIT" VALUE="Routes">
 EOF
 
-if [ "$(uci get wireless.@wifi-iface[0].mode)" != "ap" ];then
+if [ "$(nvram get wl0_mode)" != "ap" ];then
 
 cat<<EOF
 &nbsp;
@@ -389,11 +389,11 @@ de Configuration&nbsp;: </TD>
 EOF
 
 echo -n '<PRE STYLE="display:none" ID="ifconfig">'
-echo "lan_ifnames=$(uvi get network.lan.ifname)"
-echo "lan_ifname=$(uci get network.lan.ifname)"
-echo "wl0_ifname=$(uci get network.hotspot.ifname)"
-echo "wifi_ifname=$(uci get wifi_ifname)"
-echo "wan_ifname=$(uci get network.wan.ifname)"
+echo "lan_ifnames=$(nvram get lan_ifnames)"
+echo "lan_ifname=$(nvram get lan_ifname)"
+echo "wl0_ifname=$(nvram get wl0_ifname)"
+echo "wifi_ifname=$(nvram get wifi_ifname)"
+echo "wan_ifname=$(nvram get wan_ifname)"
 echo
 brctl show 2>&1
 echo
@@ -406,15 +406,15 @@ cat<<EOF
 <TR>
 <TD>NVRAM
 de Configuration&nbsp;: </TD>
-<TD><A HREF="#" ONCLICK="return fold('uci')">Afficher
+<TD><A HREF="#" ONCLICK="return fold('nvram')">Afficher
 / Masquer</A></TD>
 </TR>
 <TR>
 <TD COLSPAN="2">
 EOF
 
-echo -n '<PRE STYLE="display:none" ID="uci">'
-uci show 2>&-|sort|sed -ne'
+echo -n '<PRE STYLE="display:none" ID="nvram">'
+nvram show 2>&-|sort|sed -ne'
 /^wifi_/p
 /^wl0_/{
 s/wpa\|wep\|key/&/

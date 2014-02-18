@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="01.08.2013";SCRIPT=${0#/rom}
+export DATE="22.08.2013";SCRIPT=${0#/rom}
 export TITLE="Administration"
 . ${SCRIPT%/*}/cgi-bin-index-pre.sh
 
@@ -10,11 +10,55 @@ cat<<EOF
 La partie administration est s&eacute;par&eacute;e en 3 grandes parties :</P>
 <UL>
   <LI><B>Configuration r&eacute;seau :</B> permet de configurer les 3 interfaces r&eacute;seau de votre routeur : le sans-fil, le r&eacute;seau local et la connexion internet.</LI>
-  <LI><B>Op&eacute;rateurs :</B> permet de configurer les diff&eacute;rents services qui fonctionnent pour la 3G sur ce routeur.</LI>
+  <LI><B>Services :</B> permet de configurer les diff&eacute;rents services qui fonctionnent sur ce routeur.</LI>
+  <LI><B>Syst&egrave;me :</B> permet de configurer le syst&eacute;me pr&eacute;sent sur ce routeur.</LI>
   <LI><B>Etat :</B> permet de voir l'&eacute;tat du syst&egrave;me ainsi que des statistiques.</LI>
   <LI><B>Red&eacute;marrage :</B> permet de red&eacute;marrer le syst&eacute;me.</LI>
 </UL>
+<TABLE id="resume">
+<TR><TD><TABLE>
+<TR><TH><A HREF="/cgi-bin/network/index.html"><H2>Configuration r&eacute;seau</H2></A></TH></TR>
+EOF
 
+for inc in network/[0-9][0-9]-*;do echo $(cat $inc | sed -e "s/\(HREF=\"\)\(.*\"\)/\1network\/\2/");done
+
+cat<<EOF
+</TABLE></TD><TD><TABLE>
+<TR><TH><A HREF="/cgi-bin/services.html"><H2>Services</H2></A></TH></TR>
+EOF
+
+for inc in [0-9][0-9]-*;do cat $inc;done
+
+cat<<EOF
+</TABLE></TD></TR><TR><TD><TABLE>
+<TR><TH><A HREF="/cgi-bin/system/index.html"><H2>Syst&egrave;me</H2></A></TH></TR>
+EOF
+
+for inc in system/[0-9][0-9]-*;do echo $(cat $inc | sed -e "s/\(HREF=\"\)\(.*\"\)/\1system\/\2/");done
+
+cat<<EOF
+</TABLE></TD><TD><TABLE>
+<TR><TH><A HREF="/cgi-bin/state/index.html"><H2>Etat</H2></A></TH></TR>
+EOF
+
+for inc in state/[0-9][0-9]-*;do echo $(cat $inc | sed -e "s/\(HREF=\"\)\(.*\"\)/\1state\/\2/");done
+
+cat<<EOF
+</TABLE>
+</TD></TR>
+</TABLE>
+<NOSCRIPT>
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>L'activation
+de Javascript est n&eacute;cessaire pour recharger automatiquement la
+page de d&eacute;marrage pendant un <A HREF="reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE></NOSCRIPT>
+<P><B>Astuce</B>&nbsp;:
+Appuyer sur <KBD STYLE="text-decoration: blink;">[F1]</KBD> ou d&eacute;placer
+doucement la souris sur les zones de contr&ocirc;le pour afficher un petit
+message d'aide.</P>
 EOF
 
 . ${SCRIPT%/*}/cgi-bin-post.sh

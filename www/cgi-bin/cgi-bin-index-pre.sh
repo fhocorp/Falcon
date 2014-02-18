@@ -4,9 +4,9 @@ _loadavg="${_uptime#*load average: }"
 _uptime="${_uptime#*up }"
 _uptime="${_uptime%%,*}"
 _hostname=$(cat /proc/sys/kernel/hostname)
-_version=$( grep "Falcon" /etc/version )
-_version="${_version%% ---*}"
+_version=$(cat /etc/falcon_version)
 _connexion3g="$(/sbin/ifconfig 3g-mobile | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+_connexionwan="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 
 echo Content-type: text/html
 echo
@@ -113,20 +113,21 @@ document.onkeypress = help;
 <SPAN CLASS="color"><A CLASS="color" HREF="../cgi-bin-index.html">Accueil</A></SPAN><IMG ALT="" HEIGHT="10" HSPACE="2" SRC="../images/vertbar.gif" WIDTH="1"><SPAN CLASS="color"><A CLASS="color" HREF="index.html">Administration</A></SPAN>
 </div>
 <div id="header">
-        <div id="logo"><img src="../images/logo.png" /></div>
-	<div id="polaris-title"><h1>Console d'administration Falcon</h1></div>
+        <div id="logo"><img src="../images/logo2.png" /></div>
+	<div id="polaris-title"><h1>Console d'administration</h1></div>
 	<div id="polaris-title2"><h1></h1></div>
 	<div id="short-status">
 		<ul>
+			<li><strong>Host Name:</strong> $_hostname</li>
 			<li><strong>Uptime:</strong> $_uptime</li>
 	                <li><strong>Charge syst&egrave;me:</strong> $_loadavg</li>
-			<li><strong>Version:</strong> $_version</li>
-			<li><strong>Connexion 3G:</strong> $_connexion3g</li>
+			<li><strong>Adresse IP:</strong> $_connexionwan $_connexion3g</li>
 		</ul>
 	</div>
 </div>
 <div id="submenu">
-<A HREF="/cgi-bin/network/index.html">Configuration R&eacute;seau</A><A HREF="/cgi-bin/operateurs.html">Operateurs</A><A HREF="/cgi-bin/state/index.html">Etat</A><A HREF="/cgi-bin/reset.html">Red&eacute;marrage</A></div>
+<A HREF="network/index.html">Configuration R&eacute;seau</A><A HREF="services.html">Services</A><A HREF="system/index.html">Syst&egrave;me</A><A HREF="state/index.html">Etat</A><A HREF="reset.html">Red&eacute;marrage</A>
+</div>
 <div id="sidebar_left">
 </div>
 <div id="sidebar_right">

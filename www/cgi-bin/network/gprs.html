@@ -1,0 +1,87 @@
+#!/bin/sh
+
+export DATE="22.08.2013";SCRIPT=${0#/rom}
+export TITLE="R&eacute;seau GPRS"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>R&eacute;seau GPRS</H1>
+<P>Cette page vous permet de configurer le r&eacute;seau GPRS de votre routeur.</P>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+network_mobile_apn="$(uci get network.mobile.apn)"
+network_mobile_username="$(uci get network.mobile.username)"
+network_mobile_password="$(uci get network.mobile.password)"
+
+cat<<EOF
+<FORM ACTION="gprs.html" CLASS="form" METHOD="POST"><TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0"
+CLASS="formfixwidth"><TR
+TITLE="Ceci est l'apn du point d'accès de votre opérateur mobile.">
+<TD>APN&nbsp;:</TD><TD><INPUT NAME="apn" SIZE="32" TYPE="TEXT" VALUE="$network_mobile_apn")></TD>
+</TR>
+<TR
+TITLE="Utilisateur APN.">
+<TD>Utilisateur&nbsp;:</TD>
+<TD><INPUT NAME="username" SIZE="32" TYPE="TEXT" VALUE="$network_mobile_username")></TD>
+</TR>
+<TR
+TITLE="Mot de passe APN.">
+<TD>Mot de passe&nbsp;:</TD>
+<TD><INPUT NAME="password" SIZE="32" TYPE="TEXT" VALUE="$network_mobile_password")></TD></TR>
+</TR><TR><TD COLSPAN="2">&nbsp;</TD>
+</TR><TR><TD COLSPAN="2"><INPUT NAME="post_gprs" TITLE="Appliquer ces changements. Les paramètres seront utilisés au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<P><B>Astuce</B>&nbsp;:
+Ces param&egrave;tres d&eacute;finissent la configuration envoy&eacute;e
+aux clients par DHCP. Pour assurer une connexion efficace au r&eacute;seau,
+vous pouvez fixer le <B>Nom d'h&ocirc;te</B> et le <B>Nom de Domaine</B>
+interne (-&gt; <A HREF="../system/system.html">Syst&egrave;me</A>).
+</P>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_.a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_gprs" ]; then
+for V in network_mobile_apn network_mobile_username network_mobile_password; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(uci get $V)" ]; then
+DIRTY=1
+uci set $V="$C"
+fi
+done
+if checkbridge; then
+DIRTY=1
+fi
+fi
+if [ -n "$DIRTY" ]; then
+uci commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Les
+changements sont enregistr&eacute;s. Les param&egrave;tres seront utilis&eacute;s
+au prochain <A HREF="/cgi-bin/reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Aucun
+changement effectu&eacute;.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

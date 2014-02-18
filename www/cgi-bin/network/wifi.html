@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export DATE="22.08.2013";SCRIPT=${0#/rom}
 export TITLE="Sans Fil"
 . ${SCRIPT%/*}/cgi-bin-pre.sh
 
@@ -15,14 +15,14 @@ read QUERY_STRING
 fi
 if [ -z "$QUERY_STRING" ]; then
 #Speedups
-wifi_proto="$(nvram get wifi_proto)"
-wifi_ipaddr=$(nvram get wifi_ipaddr)
-wifi_netmask=$(nvram get wifi_netmask)
-ff_wl_dhcp_start=$(nvram get ff_wl_dhcp_start)
-ff_wl_dhcp_num=$(nvram get ff_wl_dhcp_num)
+wifi_proto="$(uci get wifi_proto)"
+wifi_ipaddr=$(uci get network.lan.ipaddr)
+wifi_netmask=$(uci get network.lan.netmask)
+ff_wl_dhcp_start=$(uci get ff_wl_dhcp_start)
+ff_wl_dhcp_num=$(uci get ff_wl_dhcp_num)
 test -z "$ff_wl_dhcp_num" && ff_wl_dhcp_num=4
-lan_ipaddr=$(nvram get lan_ipaddr)
-lan_netmask=$(nvram get lan_netmask)
+lan_ipaddr=$(uci get network.lan.ipaddr)
+lan_netmask=$(uci get network.lan.netmask)
 ff_wifi_proto=$(nvram get ff_wifi_proto)
 test -z "$ff_wifi_proto" && wifi_proto=static
 case $wifi_proto in

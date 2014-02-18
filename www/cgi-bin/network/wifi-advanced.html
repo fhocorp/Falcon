@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="01.08.2013";SCRIPT=${0#/rom}
+export DATE="22.08.2013";SCRIPT=${0#/rom}
 export TITLE="Sans Fil : avanc&eacute;"
 . ${SCRIPT%/*}/cgi-bin-pre.sh
 
@@ -16,17 +16,17 @@ read QUERY_STRING
 fi
 if [ -z "$QUERY_STRING" ]; then
 #Speedups
-wl0_antdiv="$(nvram get wl0_antdiv)"
-wl0_txant="$(nvram get wl0_txant)"
-wl0_gmode="$(nvram get wl0_gmode)"
-wl0_rateset="$(nvram get wl0_rateset)"
-wl0_rate="$(nvram get wl0_rate)"
-wl0_mrate="$(nvram get wl0_mrate)"
-wl0_closed="$(nvram get wl0_closed)"
-wl0_phytype="$(nvram get wl0_phytype)"
+wl0_antdiv="$(uci get wl0_antdiv)"
+wl0_txant="$(uci get wireless.wl0.txantenna)"
+wl0_gmode="$(uci get wireless.wl0.hwmode)"
+wl0_rateset="$(uci get wl0_rateset)"
+wl0_rate="$(uci get wl0_rate)"
+wl0_mrate="$(uci get wl0_mrate)"
+wl0_closed="$(uci get wl0_closed)"
+wl0_phytype="$(uci get wl0_phytype)"
 if [ "$(uci get wireless.@wifi-iface[0].mode)" = "ap" ]; then
 wmode=master
-elif [ "$(nvram get wl0_infra)" = "1" ]; then
+elif [ "$(uci get wl0_infra)" = "1" ]; then
 wmode=client
 else
 wmode=ad-hoc
@@ -51,7 +51,7 @@ VALUE='ad-hoc' $(test "$wmode" = "ad-hoc" && echo "selected=selected")>Ad Hoc (P
 <TR
 TITLE="Le ESSID indique le réseau sans fil sur lequel se connecte le point d'accès. Tous les nœuds doivent utiliser le même ESSID.">
 <TD>ESSID&nbsp;:</TD>
-<TD><INPUT NAME="wl0_ssid" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_ssid)"></TD>
+<TD><INPUT NAME="wl0_ssid" SIZE="48" TYPE="TEXT" VALUE="$(uci get wireless.@wifi-iface[0].ssid)"></TD>
 </TR>
 <TR
 TITLE="Fixer le BSSID (par exemple '02:ca:ff:ee:ba:be') peut stabiliser un réseau fonctionnant en mode Ad Hoc. Tous les nœuds doivent utiliser le même BSSID.">
@@ -61,7 +61,7 @@ TITLE="Fixer le BSSID (par exemple '02:ca:ff:ee:ba:be') peut stabiliser un résea
 <TR
 TITLE="Entrer un numéro de canal entre 1 et 13. Dans certains pays (USA) les canaux 12 et 13 sont interdits. Le Japon peut utiliser aussi le canal 14.">
 <TD>Canal&nbsp;:</TD>
-<TD><INPUT NAME="wl0_channel" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wl0_channel)"></TD>
+<TD><INPUT NAME="wl0_channel" SIZE="48" TYPE="TEXT" VALUE="$(uci get wireless.wl0.channel)"></TD>
 </TR>
 <TR
 TITLE="Si une carte Broadcom en mode 802.11a est installé, cette option active le support 802.11b/g.">

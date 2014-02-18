@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="01.08.2013";SCRIPT=${0#/rom}
+export DATE="22.08.2013";SCRIPT=${0#/rom}
 export TITLE="Internet"
 . ${SCRIPT%/*}/cgi-bin-pre.sh
 
@@ -12,11 +12,11 @@ EOF
 if [ "$REQUEST_METHOD" = "POST" ]; then
 read QUERY_STRING
 fi
-wan_ifname="$(nvram get wan_ifname)"
+wan_ifname="$(uci get network.wan.ifname)"
 if [ -z "$QUERY_STRING" ]; then
 #Speedups
-wan_proto="$(nvram get wan_proto)"
-wan_ports="$(nvram get $wan_ifname'ports')"
+wan_proto="$(uci get network.wan.proto)"
+wan_ports="$(echo eth1)"
 
 cat<<EOF
 <SCRIPT TYPE="text/javascript"><!--
@@ -25,7 +25,7 @@ affiche_proto('$wan_proto');
 }
 function affiche_proto(proto) {
 if (proto=="static" || proto=="olsr") {
-formulaire = "<TR><TD>Adresse IP&nbsp;:</TD><TD><INPUT NAME=\"wan_ipaddr\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_ipaddr)\"></TD></TR><TR TITLE=\"Le masque de sous-r&eacute;seau indique quelles adresses IP sont joignable directement (&agrave; partir de l'interface Internet).\"><TD>Masque de sous r&eacute;seau&nbsp;:</TD><TD><INPUT NAME=\"wan_netmask\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_netmask)\"></TD></TR><TR TITLE=\"Route par d&eacute;faut pour le raccordement &agrave; l'Internet.\"><TD>Route par d&eacute;faut WAN&nbsp;:</TD><TD><INPUT NAME=\"wan_gateway\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_gateway)\"></TD></TR>";
+formulaire = "<TR><TD>Adresse IP&nbsp;:</TD><TD><INPUT NAME=\"wan_ipaddr\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(uci get network.wan.proto)\"></TD></TR><TR TITLE=\"Le masque de sous-r&eacute;seau indique quelles adresses IP sont joignable directement (&agrave; partir de l'interface Internet).\"><TD>Masque de sous r&eacute;seau&nbsp;:</TD><TD><INPUT NAME=\"wan_netmask\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_netmask)\"></TD></TR><TR TITLE=\"Route par d&eacute;faut pour le raccordement &agrave; l'Internet.\"><TD>Route par d&eacute;faut WAN&nbsp;:</TD><TD><INPUT NAME=\"wan_gateway\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_gateway)\"></TD></TR>";
 }
 else if (proto=="pppoe") {
 
@@ -88,11 +88,11 @@ else
 IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
 DIRTY=
 if [ -n "$post_wan" ]; then
-wan_ifname=$(nvram get wan_ifname)
-wan_device=$(nvram get wan_device)
+wan_ifname=$(uci get network.wan.ifname)
+wan_device=$(uci get wan_device)
 if [ "pppoe" = "$wan_proto" ]; then
 wan_device=$wan_ifname
-wan_ifname=ppp0
+wan_ifname=eth0
 else
 wan_ifname=$wan_device
 fi
@@ -100,14 +100,14 @@ for V in wan_proto wan_ifname wan_device wan_ipaddr wan_netmask wan_gateway wan_
 eval "C=\$$V"
 C=$(unescape $C)
 test "$V" = "wan_ports" && V=$wan_ifname'ports'
-if [ "$C" != "$(nvram get $V)" ]; then
+if [ "$C" != "$(uci get $V)" ]; then
 DIRTY=1
-nvram set $V="$C"
+uci set $V="$C"
 fi
 done
 fi
 if [ -n "$DIRTY" ]; then
-nvram commit>/dev/null 2>&1
+uci commit>/dev/null 2>&1
 
 cat<<EOF
 <TABLE BORDER="0" CLASS="note"><TR><TD>Les

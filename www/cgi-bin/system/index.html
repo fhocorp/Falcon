@@ -17,15 +17,16 @@ page de d&eacute;marrage pendant un <A HREF="/cgi-bin/reset.html">Red&eacute;mar
 <H2>R&eacute;capitulatif</H2>
 <TABLE id="resume">
 <TR><TH COLSPAN="2"><A HREF="address.html"><H2>Contact</H2></A></TH></TR>
-<TR><TD><B>Surnom</B></TD><TD>$(nvram get ff_adm_nick)</TD></TR>
-<TR><TD><B>Nom</B></TD><TD>$(nvram get ff_adm_name)</TD></TR>
-<TR><TD><B>Email</B></TD><TD>$(nvram get ff_adm_mail)</TD></TR>
-<TR><TD><B>R&eacute;seau</B></TD><TD>$(nvram get ff_adm_network)</TD></TR>
+<TR><TD><B>Surnom</B></TD><TD>$(echo FHO Corp)</TD></TR>
+<TR><TD><B>Nom</B></TD><TD>$(echo FHO)</TD></TR>
+<TR><TD><B>Email</B></TD><TD>$(echo fhohollinger@gmail.com)</TD></TR>
+<TR><TD><B>R&eacute;seau</B></TD><TD>$(echo DEVBLOG SAS)</TD></TR>
 <TR><TD><B>Latitude</B></TD><TD>$(nvram get ffw_adm_lat)</TD></TR>
 <TR><TD><B>Longitude</B></TD><TD>$(nvram get ffw_adm_lon)</TD></TR>
-<TR><TH COLSPAN="2"><A HREF="system.html"><H2>Syst&egrave;me</H2></A></TH></TR>
-<TR><TD><B>Nom de d'h&ocirc;te</B></TD><TD>$(nvram get wan_hostname)</TD></TR>
-<TR><TD><B>Nom de domaine</B></TD><TD>$(nvram get wan_domain)</TD></TR>
+<TR><TH COLSPAN="2"><A HREF="system.html"><H2>Informations Syst&egrave;me</H2></A></TH></TR>
+<TR><TD><B>Nom de d'h&ocirc;te</B></TD><TD>$(echo Falcon)</TD></TR>
+<TR><TD><B>Version du systeme</B></TD><TD>$(cat /etc/version)</TD></TR>
+<TR><TD><B>Nom de domaine</B></TD><TD>$(echo lan)</TD></TR>
 </TABLE>
 
 <P><B>Astuce</B>&nbsp;:

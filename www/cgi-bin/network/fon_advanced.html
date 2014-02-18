@@ -1,0 +1,22 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Serveur-WEB WiFi : avanc&eacute;"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Serveur-WEB WiFi : avanc&eacute;</H1>
+<P>Cette page vous affiche les clients presents sur le hotspot Serveur-WEB.
+</P>
+<P>Merci de noter que uniquement les membres Serveur WEB et disposant d'un pass de connexion pourront se connecter à votre hotspot.
+</P>
+<br>
+</br>
+<TR><TD><B>Postes connectés: </B></TD><TD>$(chilli_query list)</TD></TR>
+
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

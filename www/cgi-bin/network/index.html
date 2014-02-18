@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export DATE="01.08.2013";SCRIPT=${0#/rom}
+export DATE="22.08.2013";SCRIPT=${0#/rom}
 export TITLE="Configuration R&eacute;seau"
 . ${SCRIPT%/*}/cgi-bin-pre.sh
 
@@ -13,10 +13,13 @@ EOF
 if [ $(uci get network.lan.proto) != "disabled" ]; then
 
 cat<<EOF
+<TR><TD><B>Constructeur</B></TD><TD>$(uci get wireless.wl0.type)</TD></TR>
 <TR><TD><B>Adresse IP</B></TD><TD>$(uci get network.lan.ipaddr)</TD></TR>
 <TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(uci get network.lan.netmask)</TD></TR>
 <TR><TD><B>Canal radio</B></TD><TD>$(uci get wireless.wl0.channel)</TD></TR>
 <TR><TD><B>ESSID</B></TD><TD>$(uci get wireless.@wifi-iface[0].ssid)</TD></TR>
+<TR><TD><B>Securité</B></TD><TD>$(uci get wireless.@wifi-iface[0].encryption)</TD></TR>
+<TR><TD><B>Mode</B></TD><TD>802.$(uci get wireless.wl0.hwmode)</TD></TR>
 </UL>
 EOF
 
@@ -29,14 +32,16 @@ EOF
 fi
 
 cat<<EOF
-<TR><TH COLSPAN="2"><A HREF="fon.html"><H2>Point d'acces FON</H2></A></TH></TR>
+<TR><TH COLSPAN="2"><A HREF="fon.html"><H2>Hotspot Chillifire</H2></A></TH></TR>
 EOF
-if [ $(uci get network.lan.proto) != "disabled" ]; then
+if [ $(uci get network.hotspot.proto) != "disabled" ]; then
 
 cat<<EOF
+<TR><TD><B>Adresse IP</B></TD><TD>$(/sbin/ifconfig tun0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')</TD></TR>
+<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(uci get network.lan.netmask)</TD></TR>
 <TR><TD><B>Canal radio</B></TD><TD>$(uci get wireless.wl0.channel)</TD></TR>
 <TR><TD><B>ESSID</B></TD><TD>$(uci get wireless.@wifi-iface[1].ssid)</TD></TR>
-</UL>
+<TR><TD><B>Client connectés</B></TD><TD><A HREF="fon_advanced.html">Voir</A></TD></TR>
 EOF
 
 else 
@@ -46,7 +51,6 @@ cat<<EOF
 EOF
 
 fi
-
 cat<<EOF
 <TR><TH COLSPAN="2"><A HREF="lan.html"><H2>R&eacute;seau local</H2></A></TH></TR>
 EOF
@@ -55,9 +59,31 @@ if [ $(uci get network.lan.proto) != "disabled" ]; then
 cat<<EOF
 <TR><TD><B>Adresse IP</B></TD><TD>$(uci get network.lan.ipaddr)</TD></TR>
 <TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(uci get network.lan.netmask)</TD></TR>
+<TR><TD><B>Serveur DNS</B></TD><TD>$(uci get network.lan.dns)</TD></TR>
 EOF
 
-else 
+else
+
+cat<<EOF
+<TR><TD>d&eacute;sactiv&eacute;</TD></TR>
+EOF
+
+fi
+
+cat<<EOF
+<TR><TH COLSPAN="2"><A HREF="vpn.html"><H2>OpenVPN</H2></A></TH></TR>
+EOF
+if [ $(uci get network.hotspot.proto) != "disabled" ]; then
+
+cat<<EOF
+<TR><TD><B>Interface</B></TD><TD>$(echo tun1)</TD></TR>
+<TR><TD><B>Adresse IP VPN</B></TD><TD>$(/sbin/ifconfig tun1 | grep 'P-t-P:' | cut -d: -f2 | awk '{ print $1}')</TD></TR>
+<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(ifconfig tun1 | grep 'Mask:'| cut -d: -f4 | awk '{ print $1}')</TD></TR>
+<TR><TD><B>Serveur VPN</B></TD><TD>$(netstat -r | grep '195.154.109.235' | awk '{ print $1}')</TD></TR>
+EOF
+
+else
+
 
 cat<<EOF
 <TR><TD>d&eacute;sactiv&eacute;</TD></TR>
@@ -65,23 +91,34 @@ EOF
 
 fi
 cat<<EOF
-<TR><TH COLSPAN="2"><A HREF="wan.html"><H2>Connexion ethernet</H2></A></TH></TR>
-EOF
-if [ $(uci get network.wan.proto) != "disabled" ]; then
-
-cat<<EOF
-<TR><TD><B>Adresse IP</B></TD><TD>$(uci get network.wan.ipaddr)</TD></TR>
-<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(uci get network.wan.netmask)</TD></TR>
-EOF
-
-fi
-cat<<EOF
-<TR><TH COLSPAN="2"><A HREF="wanmobile.html"><H2>Connexion 3G+/H+</H2></A></TH></TR>
+<TR><TH COLSPAN="2"><A HREF="gprs.html"><H2>3G/4G</H2></A></TH></TR>
 EOF
 if [ $(uci get network.mobile.proto) != "disabled" ]; then
 
 cat<<EOF
-<TR><TD><B>Adresse IP</B></TD><TD>$(/sbin/ifconfig 3g-mobile | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')</TD></TR>
+<TR><TD><B>Adresse IP</B></TD><TD>$(ifconfig 3g-mobile | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}')</TD></TR>
+<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(ifconfig 3g-mobile | grep 'Mask:'| cut -d: -f4 | awk '{ print $1}')</TD></TR>
+<TR><TD><B>Passerelle</B></TD><TD>$(netstat -r | grep 'default' | awk '{ print $2}')</TD></TR>
+<TR><TD><B>Serveurs DNS</B></TD><TD>$(cat /tmp/resolv.conf.ppp | grep 'nameserver'| cut -d: -f4 | awk '{ print $2}')</TD></TR>
+<TR><TD><B>APN</B></TD><TD>$(uci get network.mobile.apn)</TD></TR>
+<TR><TD><B>Interface</B></TD><TD>$(uci get network.mobile.device)</TD></TR>
+EOF
+
+else
+
+cat<<EOF
+<TR><TD>d&eacute;sactiv&eacute;</TD></TR>
+EOF
+
+fi
+cat<<EOF
+<TR><TH COLSPAN="2"><A HREF="wan.html"><H2>Connexion internet WAN</H2></A></TH></TR>
+EOF
+if [ $(uci get network.wan.proto) != "disabled" ]; then
+
+cat<<EOF
+<TR><TD><B>Adresse IP</B></TD><TD>$(ifconfig eth0 | grep 'inet addr:'| cut -d: -f2 | awk '{ print $1}')</TD></TR>
+<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(ifconfig eth0 | grep 'Mask:'| cut -d: -f4 | awk '{ print $1}')</TD></TR>
 EOF
 
 else 
