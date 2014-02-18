@@ -1,3 +1,4 @@
+
 config defaults
 	option syn_flood '1'
 	option input 'ACCEPT'
@@ -91,8 +92,8 @@ config include
 
 config zone
 	option name 'hotspot'
-	option input 'DROP'
+	option input 'ACCEPT'
 	option output 'ACCEPT'
 	option network 'hotspot'
-	option forward 'DROP'
+	option forward 'ACCEPT'
 

@@ -1,0 +1,17 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+
+log() {
+	logger -t "FALCON Setup" "$@"
+}
+
+START=99
+
+start() {
+	log "Initializing FALCON"
+	/etc/savevar
+}
+
+stop() {
+	log "Stopping FALCON"
+}

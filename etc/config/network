@@ -1,3 +1,4 @@
+
 config interface 'loopback'
 	option ifname 'lo'
 	option proto 'static'
@@ -10,7 +11,7 @@ config interface 'lan'
 	option proto 'static'
 	option ipaddr '192.168.1.1'
 	option netmask '255.255.255.0'
-	option dns '4.2.2.1 4.2.2.2'
+	option dns '156.154.70.1 156.154.71.1'
 
 config interface 'wan'
 	option ifname 'eth0'
@@ -38,3 +39,4 @@ config interface 'tunnel'
 config interface 'chilli'
 	option proto 'none'
 	option ifname 'tun1'
+
