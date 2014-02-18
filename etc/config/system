@@ -1,0 +1,44 @@
+
+config system
+	option zonename 'Europe/Paris'
+	option timezone 'CET-1CEST,M3.5.0,M10.5.0/3'
+	option conloglevel '8'
+	option cronloglevel '8'
+	option hostname 'Falcon'
+
+config timeserver 'ntp'
+	list server 'ntp.univ-lyon1.fr'
+	option enable_server '1'
+
+config led
+	option default '0'
+	option name '3G'
+	option sysfs 'NB4-FXC-r2:white:adsl'
+	option trigger 'netdev'
+	option dev '3g-mobile'
+	option mode 'link'
+
+config led
+	option default '0'
+	option name 'Traffic'
+	option sysfs 'NB4-FXC-r2:white:traffic'
+	option trigger 'netdev'
+	option dev '3g-mobile'
+	option mode 'link tx rx'
+
+config led
+	option default '0'
+	option name 'Connexion'
+	option sysfs 'NB4-FXC-r2:green:service'
+	option trigger 'netdev'
+	option dev 'tun0'
+	option mode 'link'
+
+config led
+	option default '0'
+	option name 'Wifi'
+	option sysfs 'NB4-FXC-r2:white:wifi'
+	option trigger 'netdev'
+	option dev 'wl0'
+	option mode 'link'
+

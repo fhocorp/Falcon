@@ -1,0 +1,42 @@
+
+config interface 'loopback'
+	option ifname 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config interface 'lan'
+	option ifname 'eth1'
+	option type 'bridge'
+	option proto 'static'
+	option ipaddr '192.168.1.1'
+	option netmask '255.255.255.0'
+	option dns '156.154.70.1 156.154.71.1'
+
+config interface 'wan'
+	option ifname 'eth0'
+	option proto 'dhcp'
+
+config interface 'mobile'
+	option proto '3g'
+	option device '/dev/ttyUSB0'
+	option service 'umts'
+	option apn 'vpnbouygtel.com'
+
+config interface 'hotspot'
+	option _orig_ifname 'wl0.1'
+	option _orig_bridge 'true'
+	option ifname 'eth0.1'
+	option proto 'none'
+	option auto '1'
+	option type 'bridge'
+	option stp '1'
+
+config interface 'tunnel'
+	option proto 'none'
+	option ifname 'tun0'
+
+config interface 'chilli'
+	option proto 'none'
+	option ifname 'tun1'
+

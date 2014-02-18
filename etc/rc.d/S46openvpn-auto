@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+START=46
+boot() {
+        start
+}
+start() {
+        openvpn --daemon --config /etc/openvpn/client.conf
+}
+reload() {
+killall -SIGHUP openvpn
+}
+stop() {
+killall openvpn
+}

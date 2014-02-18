@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+START=99
+boot() {
+        start
+}
+start() {
+        chilli -fd &
+}
+reload() {
+killall -SIGHUP chilli
+}
+stop() {
+killall chilli
+}

@@ -1,0 +1,25 @@
+
+config wifi-device 'wl0'
+	option type 'broadcom'
+	option channel '6'
+	option txpower '24'
+	option hwmode '11bg'
+	option txantenna '3'
+	option rxantenna '3'
+
+config wifi-iface
+	option device 'wl0'
+	option mode 'ap'
+	option ssid 'Falcon'
+	option encryption 'psk2'
+	option key 'pr0t3ct10n'
+	option network 'lan'
+
+config wifi-iface
+	option device 'wl0'
+	option mode 'ap'
+	option ssid 'Serveur WEB WiFi'
+	option encryption 'none'
+	option isolate '1'
+	option network 'hotspot'
+

@@ -1,0 +1,117 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+#Chillispot Chillifire Script by FHO Corp (c) 2014
+
+START=99
+boot() {
+        start
+}
+TMP_C=/tmp/chilli.conf
+ETC_C=/etc/chilli.conf
+PID_F=/var/run/chilli.pid
+CMDSOCK=/var/run/chilli.sock
+PID_LOOP_F=/var/run/chilli_loop.pid
+LOG_LOOP_F=/var/log/chilli_loop.log
+LOOP=true
+
+
+
+quit()
+{
+	LOOP="false"
+	circular_log $LOG_LOOP_F "Signal caught. Exiting..."
+}
+
+circular_log() {
+	echo "chillispot $(date) $2" >> $1
+	tail -24 $1 > $1.tmp
+	mv $1.tmp $1
+}
+
+is_alive() {
+	if [ ! -f $PID_F ]; then
+		echo "dead"
+		return 0
+	fi
+
+	TEST_PID=$(cat $PID_F)
+
+	if [ ! -d /proc/$TEST_PID ]; then
+		rm $PID_F
+		echo "dead"
+		return 0
+	fi
+
+	CANDIDATE=$(cat /proc/$TEST_PID/status | grep Name: | awk '{ print $2 }')
+
+	if [ "$CANDIDATE" = "chilli" ]; then
+		echo "alive"
+		return 0
+	else
+		rm $PID_F
+		echo "dead"
+		return 0
+	fi
+}
+
+do_start() {
+	/usr/sbin/chilli \
+		--dns1="4.2.2.1" \
+		--dns2="4.2.2.2" \
+		--radiusnasid="00-18-39-62-45-ad" \
+		--dhcpif br-hotspot \
+		--domain "hotspot.serveur-web.net" \
+		--papalwaysok \
+		--pidfile=$PID_F \
+		--cmdsock=$CMDSOCK \
+		--localusers=/etc/localusers \
+		--wwwbin=/bin/true \
+		--ipup=/bin/true \
+		--ipdown=/bin/true \
+		--conup="fs -l hotspot_inccount" \
+		--condown="fs -l hotspot_decount"
+
+	[ $? == 0 ] && return 0
+	return 1
+}
+
+start() {
+	
+	[ alive = "$(is_alive)" ] && return 0
+	do_start
+	# amazing automonitoring system.
+	[ $? == 0 ] && fs -l hotspot_wdt_start
+	echo chillispot Chillifire successfully started !
+}
+
+restart() {
+	fs -l hotspot_wdt_stop
+	killall chilli
+	rm -f /var/run/chilli.pid
+	do_start
+	[ $? == 0 ] && fs -l hotspot_wdt_start 
+}
+
+stop() {
+	killall -HUP chilli
+	fs -l hotspot_wdt_stop
+
+	[ alive = "$(is_alive)" ] || {
+		echo ERROR: chillispot is not running
+		[ -f $PID_LOOP_F ] && kill $(cat $PID_LOOP_F) > /dev/null 2>&1
+			rm -f $PID_LOOP_F > /dev/null 2>&1
+			exit 0
+	}
+
+	[ -f $PID_F ] && kill $(cat $PID_F) >/dev/null 2>&1
+	rm -f $PID_F
+	[ -f $PID_LOOP_F ] && kill $(cat $PID_LOOP_F) > /dev/null 2>&1
+	rm -f $PID_LOOP_F
+}
+
+
+reload() {
+
+	killall -HUP chilli
+	do_start
+}
