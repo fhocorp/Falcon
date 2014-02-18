@@ -40,5 +40,5 @@ config led
 	option sysfs 'NB4-FXC-r2:white:wifi'
 	option trigger 'netdev'
 	option dev 'wl0'
-	option mode 'link'
+	option mode 'link tx rx'
 
