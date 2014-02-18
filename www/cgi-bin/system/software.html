@@ -1,0 +1,198 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Paquetages Logiciels"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Paquetages Logiciels</H1>
+EOF
+
+if [ "(ro)" != "$(mount|grep " / "|if read line; then set $line;echo $6;fi)" ]; then
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="software.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Pick an ipk-file for uploading to the devices. You can automatically or manually install this software achive file after uploading. If you select 'freifunk-recommended', recommended software is installed automatically via Internet.">
+<TR>
+<TD>Fichier Logiciel (*.ipk)&nbsp;:</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="ipkfile" SIZE="32" TYPE="FILE" VALUE="Parcourir..."></TD>
+</TR>
+<TR>
+<TD><INPUT CHECKED="CHECKED" NAME="install" TYPE="RADIO" VALUE="1" ONCHANGE="this.form.ipkfile.disabled=(2==this.value);this.form.encoding=(2==this.value?'':'multipart/form-data')">Installation
+Automatique&nbsp;<INPUT NAME="install" TYPE="RADIO" VALUE="0" ONCHANGE="this.form.ipkfile.disabled=(2==this.value);this.form.encoding=(2==this.value?'':'multipart/form-data')">Installation
+manuelle
+EOF
+
+TOTMEM=$(grep MemTotal: /proc/meminfo|if read line;then set $line;echo $2;fi)
+if [ -z "$TOTMEM" ] || [ 8192 -lt $TOTMEM ]; then
+
+cat<<EOF
+<INS STYLE="display:none" ID="ffreco"><INPUT NAME="install" TYPE="RADIO" VALUE="2" ONCHANGE="this.form.ipkfile.disabled=(2==this.value);this.form.encoding=(2==this.value?'':'multipart/form-data')">&quot;freifunk-recommended-fr&quot;
+EOF
+
+fi
+
+cat<<EOF
+</INS>
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+ffreco.style.display='';
+//--></SCRIPT></TD>
+</TR>
+<TR>
+<TD>&nbsp;</TD>
+</TR>
+<TR>
+<TD><INPUT NAME="post_ipk" TITLE="Charge un fichier et le stocke dans le répertoire /tmp." TYPE="SUBMIT" VALUE="Charger le fichier">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<NOSCRIPT>
+<FORM ACTION="software.html" METHOD="POST">
+<P><INPUT TYPE="HIDDEN" NAME="install" VALUE="2"><INPUT TYPE="SUBMIT" NAME="post_ipk" VALUE="freifunk-recommended-fr"></P>
+</FORM></NOSCRIPT>
+<H2>Installation manuelle</H2>
+<P>Afin d'installer et configurer
+une extension manuellement, il faut d'abord le fichier sur l'AP. Ensuite
+l'installation proprement dite est possible en ouvrant une ligne de
+commande SSH Linux. Lancer un client ssh et se connecter sur <SAMP>root@$(nvram get lan_ipaddr)</SAMP>. Le mot de passe est identique &agrave; celui
+utilis&eacute; pour l'administration par interface Web. <B>Truc</B>&nbsp;:
+Les utilisateurs Windows peuvent utiliser le Freeware
+<A HREF="http://www.chiark.greenend.org.uk/%7Esgtatham/putty/">PuTTY</A>
+comme client SSH.</P>
+<P><B>Exemple</B>&nbsp;: Installer le
+fichier de paquetage <SAMP>trucmuch_1.0_mipsel.ipk</SAMP>. Apr&egrave;s
+avoir charg&eacute; le fichier ipk, l'installation manuelle est lanc&eacute;e
+&agrave; partir de la ligne de commande SSH avec les instructions
+suivantes&nbsp;: <CODE>ipkg&nbsp;install&nbsp;
+/tmp/truc_much_1.0_mipsel.ipk</CODE> [Touche Entr&eacute;e].</P>
+<P>Avec une connexion Internet active,
+on peut alternativement utiliser ces commandes&nbsp;: </P>
+<UL>
+<LI><CODE>ipkg update</CODE>: Mise &agrave; jour de la liste
+des paquetages disponible sur les serveurs sp&eacute;cifi&eacute;s dans
+/etc/ipkg.conf.</LI>
+<LI><CODE>ipkg list|less</CODE>:
+Affiche les informations de disponibilit&eacute;s des paquetages.
+</LI>
+<LI><CODE>ipkg install name</CODE>:  Installe
+un paquetage via Internet </LI>
+</UL>
+<P> Les commandes sont tap&eacute;es
+au prompt et confirm&eacute;es par la touche Entr&eacute;e...Quelques
+commandes utiles&nbsp;: <CODE>ls</CODE>, <CODE>cd</CODE>, <CODE>cp</CODE>,
+<CODE>rm</CODE> et <CODE>vi</CODE>. Beaucoup de ces commandes disposent
+d'une courte explication sur leur utilit&eacute;. Cette aide est
+accessible via l'option <CODE>-h</CODE>. Par exemple <CODE>cp -h</CODE>.
+Afin de modifier un fichier de configuration (par exemple&nbsp;: <SAMP>/etc/local.dnsmasq.conf</SAMP>),
+suivre les instructions suivantes&nbsp;:</P>
+<OL>
+<LI>Taper
+la commande <CODE>cd /etc</CODE> et la confirmer avec [Entr&eacute;e].</LI>
+<LI>La commande <CODE>ls -l loc*</CODE>
+pour lister le contenu du r&eacute;pertoire courant.</LI>
+<LI> Entrer la commande <CODE>vi
+local.dnsmasq.conf</CODE> pour visualiser et editer. Afin de se rendre
+la vie plus facile, utiliser la touche [Tab] pour compl&eacute;ter
+automatiquement les noms de fichiers, par exemple entrer <CODE>vi
+local.d</CODE> et laisser se compl&eacute;ter en pressant la touche
+[Tab]. </LI>
+<LI>
+Utiliser les touches de curseurs (les fl&egrave;ches) pour se d&eacute;placer
+l&agrave; o&ugrave; les modification du fichier doivent &ecirc;tre
+faites. </LI>
+<LI>
+Utiliser la touche [i] pour entrer dans le mode 'insertion'. Seulement &agrave;
+ce moment l&agrave; du texte peut-&ecirc;tre ajout&eacute; ou modifi&eacute;.
+Utiliser la touche [Esc] pour sortir du mode 'insertion' et revenir au
+mode commande de vi. </LI>
+<LI>
+En mode commande, taper deux fois sur la touche [d] pour effacer une
+ligne enti&egrave;re. </LI>
+<LI> En
+tapant successivement les touche [&nbsp;:] [w] [q] [Entr&eacute;e] les
+changement du texte sont sauvegard&eacute;s et la session vi est termin&eacute;e.
+</LI>
+<LI> Avec la s&eacute;quence [&nbsp;:] [q]
+[&nbsp;!] [Entr&eacute;e] vi se termine et le contenu initial du fichier
+reste inchang&eacute; (abandon des modifications). </LI>
+</OL>
+<P> <B>Note</B>&nbsp;:
+Les fichiers de configuration sont en g&eacute;n&eacute;ral des liens
+symboliques des fichiers de la partition en ROM (read-only). Pour pouvoir
+modifier ces fichiers de configuration avec vi, il faut d'abord d&eacute;truire
+ces liens vers la ROM (<CODE>rm /etc/sample.conf</CODE>), ensuite copier
+le contenu du fichier de la ROM vers la partition modifiable (<CODE>cp
+/rom/etc/sample.conf /etc</CODE>), et alors seulement lancer vi et
+apporter les changements souhait&eacute;s au contenu des fichiers
+maintenant modifiables. </P>
+EOF
+
+elif [ "$QUERY_STRING" != "${QUERY_STRING#install=2}" ]; then
+echo "<PRE STYLE='width:100%;height:100%'>"
+ipkg update && ipkg -force-defaults install freifunk-recommended-fr 2>&1
+echo "</PRE>"
+elif ! eval $(./freifunk-upload -e 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>$ffout</TD>
+</TR>
+</TABLE>
+<P>Le chargement du logiciel a &eacute;t&eacute;
+annul&eacute;.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+if [ "1" = "$install" ]; then
+echo "<PRE>"
+ipkg -force-defaults install "$ffout" 2>&1
+rm "$ffout"
+echo "</PRE>"
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Installation
+manuelle with <CODE>ipkg&nbsp;install&nbsp;$ffout</CODE></TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>R&eacute;ception
+du fichier de logiciel non effectu&eacute;e.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Les
+paquetages additionels ne peuvent pas &ecirc;tre install&eacute;s en
+mode failsafe ni en mode lecture seule. Sur la page <A HREF="reset.html">Red&eacute;marrage</A>
+activer l'option <I>Red&eacute;marrage Normal </I> et confirmer par
+<CITE>Red&eacute;marrer</CITE>.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

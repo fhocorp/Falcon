@@ -1,0 +1,30 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Acc&egrave;s Internet via OLSR"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>
+Acc&egrave;s Internet via OLSR
+</H1>
+<P>
+Si vous voyez cette page, cela signifie que vous utilisez une adresse IP qui n'est pas r&eacute;pertori&eacute;e au sein du r&eacute;seau Freifunk. L'enregistrement des adresses IP &eacute;vite que plusieurs usagers emploient la m&ecirc;me adresse et permet &agrave; d'autres usagers de vous contacter. Tous les utilisateurs enregistr&eacute;s seront inform&eacute;s des probl&egrave;mes et des changements dans le r&eacute;seau. Vous pouvez vous enregistrer <A HREF="http://">ici</A>. Pour obtenir plus d'informations &agrave; propos de notre projet, voir <A HREF="http://">http://</A>.
+</P>
+<P>
+Les Probl&egrave;mes ou questions</B> sont d&eacute;battus sur la <A HREF="http://freifunk.net/mailinglisten">mailing-list</A>.
+</P>
+<H2>
+Quelques liens:
+</H2>
+<UL>
+<LI>
+<A HREF="http://freifunk.net/wiki/FreifunkFirmwareEnglish">A propos du firmware Freifunk</A>
+</LI>
+<LI>
+<A HREF="http://www.olsr.org/">Qu'est-ce qu'OLSR ?
+</LI>
+</UL>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

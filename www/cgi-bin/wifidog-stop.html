@@ -1,0 +1,62 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Arr&ecirc;t de Wifidog"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Arr&ecirc;t de Wifidog</H1>
+EOF
+
+if test -z "$(ps|grep '/usr/bin/[w]ifidog')"
+then
+
+cat<<EOF
+<P>
+Wifidog n'est pas d&eacute;marr&eacute;<a href="wifidog-start.html">D&eacute;marrer wifidog ?</a>
+</P>
+EOF
+
+else if [ "$REQUEST_METHOD" = POST ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="wifidog-stop.html" method="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0">
+<TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0">
+<TR><TD><TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR TITLE="Cochez cette case si vous souhaitez que wifidog ne d&eacute;marre pas automatiquement lors du d&eacute;marrage ou du red&eacute;marrage du point d'acc&eacute;s">
+<TD>D&eacute;marrage non permanent : </TD>
+<TD><INPUT TYPE="checkbox" NAME="nonpermanent"></INPUT>
+<INPUT TYPE="hidden" NAME="start" VALUE="stop"></INPUT>
+</TD></TR>
+<TR><TD COLSPAN="2">
+<INPUT TYPE="submit" VALUE="Arr&eacute;ter">
+</TD></TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR>
+</TABLE></TD></TR>
+</TABLE>
+</FORM>
+EOF
+
+else
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+echo '<PRE><CODE>'
+if test -n "$nonpermanent" ;then
+nvram set wifidog=0
+nvram commit
+fi
+if [ -n "$( pidof tinyproxy )" ]
+then
+killall tinyproxy
+fi
+echo "killall wifidog"
+killall wifidog
+sleep 2
+echo '</CODE></PRE>'
+echo '<a href="wifidog.html">[retour vers l'\''interface de configuration de wifidog]</a>'
+fi;fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

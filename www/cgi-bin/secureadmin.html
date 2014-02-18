@@ -1,0 +1,141 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Admin:
+Secure Admin"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Admin:
+Administration Web Sécurisée</H1>
+EOF
+
+## some html helper functions
+# ARGS: name value default_value
+html_radio() {
+cat<<EOF
+<INPUT TYPE="radio" NAME="$1" value="$2"$(test "$2" = "$3" && echo ' checked="checked"')>&nbsp;
+EOF
+}
+# ARGS: name value default_value
+html_checkbox() {
+cat<<EOF
+<INPUT TYPE="checkbox" NAME="$1" value="$2"$(test "$2" = "$3" && echo ' checked="checked"')>&nbsp;
+EOF
+}
+# ARGS: name textfile rows cols
+html_textarea() {
+echo "<TEXTAREA NAME=\"${1:-noname}\" ROWS=\"${3:-10}\" COLS=\"${4:-60}\">"
+cat /etc/secureadmin/$2 2>/dev/null
+echo "</TEXTAREA>"
+}
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+ff_secureadmin=$(nvram get ff_secureadmin)
+ff_secureadmin=${ff_secureadmin:-on}
+ff_secureadmin_wan=$(nvram get ff_secureadmin_wan)
+
+cat<<EOF
+<FORM ACTION="secureadmin.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TR>
+<TD COLSPAN="2">$(html_radio ff_secureadmin off $ff_secureadmin)Off<BR>
+$(html_radio ff_secureadmin on $ff_secureadmin)On<BR>
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2">$(html_checkbox ff_secureadmin_wan on $ff_secureadmin_wan)Autoriser l'administration HTTPS via le WAN
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_secureadmin" TITLE="Applique ces paramètres " TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Cancel dialog page." TYPE="SUBMIT" VALUE="Annuler">
+</TD>
+</TR>
+<TR><TD COLSPAN="2">
+<H4>Clé Privée</H4>
+</TD></TR>
+<TR>
+<TD COLSPAN="2">$(html_textarea secureadmin_key privkey.pem)</TD>
+</TR>
+<TR><TD COLSPAN="2">
+<H4>Certificat SSL </H4>
+</TD></TR>
+<TR>
+<TD COLSPAN="2">$(html_textarea secureadmin_crt cert.pem)</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_secureadmin_genstuff" TITLE="génerer une nouvelle clé et certificats." TYPE="SUBMIT" VALUE="génerer nouvelle clé et certificats.">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_secureadmin_savestuff" TITLE="Appliquer cette nouvelle clé et certificat" TYPE="SUBMIT" VALUE="Appliquer">
+</TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+pidfile=/var/run/secureadmin.pid
+if kill -0 $(cat "$pidfile" 2>/dev/null) 2>/dev/null; then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>
+<B>Status:</B> le service HTTPS est disponible.
+</TD></TR></TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>
+<B>Status:</B> le service HTTPS  <B>n'est pas</B> disponible.
+</TD></TR></TABLE>
+EOF
+
+fi
+else
+IFS=\&;set $QUERY_STRING;unset IFS;eval $*
+DIRTY=
+FDIRTY=
+keyfile="/etc/secureadmin/privkey.pem"
+crtfile="/etc/secureadmin/cert.pem"
+if [ -n "$post_secureadmin_genstuff" ]; then
+FDIRTY=1
+ADDR=$(nvram get wifi_ipaddr)
+if [ -z "$ADDR" ]; then
+ADDR=$(nvram get lan_ipaddr)
+fi
+xrelayd -f -K -U"CN='$ADDR'" -p $keyfile -A $crtfile
+elif [ -n "$post_secureadmin_savestuff" ]; then
+FDIRTY=1
+unescape $secureadmin_key | sed "s,[^0-9a-zA-Z: /+=-],,g" > "$keyfile"
+unescape $secureadmin_crt | sed "s,[^0-9a-zA-Z: /+=-],,g" > "$crtfile"
+elif [ -n "$post_secureadmin" ]; then
+## update variables
+for V in ff_secureadmin ff_secureadmin_wan; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+## commit if required
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+fi
+fi
+## restart if requred
+if [ -n "$DIRTY" -o -n "$FDIRTY" ]; then
+/etc/init.d/S70secureadmin restart 2>/dev/null
+fi
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Les paramètres sont appliqués.
+</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

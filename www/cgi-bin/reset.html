@@ -1,0 +1,191 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Administration&nbsp;: Red&eacute;marrage"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Administration&nbsp;: Red&eacute;marrage</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+ff_firmware=
+if ! grep -q ff_reset /rom/etc/preinit /etc/preinit>/dev/null 2>&1; then
+ff_firmware='" DISABLED="DISABLED'
+fi
+
+cat<<EOF
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+function validate(obj) {
+for(var i = 0; i < obj.ff_reset.length; i++) {
+if ('format' == obj.ff_reset[i].value) {
+if (obj.ff_reset[i].checked) {
+var ask = 'Formatting? Enter OK.';
+if ('fr'=='de') ask = 'Formatieren? OK eingeben.';
+if ('fr'=='fr') ask = 'Formatage? Taper OK.';
+return 'OK' == prompt(ask, '');
+}
+}
+if ('killnvram' == obj.ff_reset[i].value) {
+if (obj.ff_reset[i].checked) {
+var ask = 'Completely erase NVRAM? May brick the device! Enter OKOK.';
+if ('fr'=='de') ask = 'NVRAM komplett löschen? Dies kann eine Reparatur nötig machen! OKOK eingeben.';
+if ('fr'=='fr') ask = 'Effacer Complètement la NVRAM ? Attention cela peut transmuer votre AP à l'+"'"+'état de brique ! Taper OKOK.';
+return 'OKOK' == prompt(ask, '');
+}
+}
+}
+return true;
+}
+--></SCRIPT>
+<FORM ACTION="reset.html" ID="resetform" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TR
+TITLE="Redémarrer le point d'accès pour activer les nouveaux paramètres. Débrancher et rebrancher le câble à le même effet que cette procédure.">
+<TD><INPUT CHECKED="checked" CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="$(nvram get ff_reset)"></TD>
+<TD>Red&eacute;marrage Normal</TD>
+</TR>
+<TR
+TITLE="Redémarrer le point d'accès en mode 'failsafe'. Permet de se connecter au point d'accès en 'telnet'. Si nécessaire quitter le mode 'failsafe' en débranchant et rebranchant le câble d'alimentation électrique. Le mode failsafe se termine automatiquement au bout d'une heure.">
+<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="failsafe$ff_firmware"></TD>
+<TD>Red&eacute;marra en mode
+failsafe</TD>
+</TR>
+<TR
+TITLE="Pendant le démarrage le système de fichier racine va être monté en lecture seule. Dans ce mode seul les fichiers du répertoire /tmp sont modifiables.">
+<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="readonly$ff_firmware"></TD>
+<TD>Red&eacute;marrage en mode lecture seule
+(pour chargement du firmware)</TD>
+</TR>
+<TR
+TITLE="Pendant le redémarrage la partition JFFS2 (le 'disque dur' du point d'accès) va être formaté. Après le formatage, le contenu de la partition sera initialisée avec les valeurs par défaut du Firmware. Les modifications des fichier et les paquetages additionnels sont perdus, mais les paramètres de la NVRAM, tel que les adresses IP ou les informations de contact sont conservées.">
+<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="format$ff_firmware"></TD>
+<TD>Red&eacute;marrage
+avec formatage du &quot;disque dur/JFFS2&quot; (Dur&eacute;e&nbsp;: 2&nbsp;minutes)
+EOF
+
+if [ '"nvram"' = "$(grep mtd3: /proc/mtd|if read line; then set $line;echo $4;fi)" ]; then
+
+cat<<EOF
+</TD>
+</TR>
+<TR
+TITLE="Cette option va effacer complètement le paramétrage stocké en NVRAM ! L'AP va redémarrer avec les valeurs par défaut du boot loader (CFE). Pour cette raison, le prochain redémarrage va aussi formater la partition JFFS2. Si l'AP ne redémarre pas tout seul, forcer le redémarrage en débranchant/rebranchant l'alimentation électrique !">
+<TD><INPUT CLASS="radio" NAME="ff_reset" TYPE="RADIO" VALUE="killnvram"></TD>
+<TD>Red&eacute;marre avec les valeurs par d&eacute;faut
+du boot loader. Cette fonctionnalit&eacute; n'a &eacute;t&eacute; test&eacute;e
+qu'avec ces mod&egrave;les&nbsp;: Linksys WRT54G + WRT54GS&nbsp;! Pour
+le Siemens SE505 sauvegarde les variables NVRAM et0macaddr et il0macaddr
+afin de les restituer par la suite.
+EOF
+
+fi
+
+cat<<EOF
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;<INPUT NAME="boot_wait" TYPE="HIDDEN" VALUE="on"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2" NOWRAP="nowrap"><INPUT NAME="post_reset" ONCLICK="return validate(resetform);" TITLE="Redémarre le point d'accès en fonction des options activées." TYPE="SUBMIT" VALUE="Redémarrage">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+if [ "$(uci get boot_wait)" != "on" ]; then
+
+cat<<EOF
+<P><B>Veuillez
+Noter</B>&nbsp;: Le param&egrave;tre de configuration <CODE>boot_wait</CODE>
+poss&egrave;de la valeur de &quot;$(nvram get boot_wait)&quot;. Pour
+laisser la possibilit&eacute; de charger un nouveau firmware via TFTP, la
+proc&eacute;dure de red&eacute;marrage va changer la valeur &agrave; &quot;on&quot;.</P>
+EOF
+
+fi
+if [ -n "$ff_firmware" ]; then
+
+cat<<EOF
+<P><B>Attention</B>&nbsp;:
+Les diff&eacute;rentes options de red&eacute;marrage ne fonctionne qu'avec
+le firmware Freifunk seulement.</P>
+EOF
+
+fi
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_reset" ]; then
+if [ "$ff_reset" = "killnvram" ]; then
+if [ '"nvram"' = "$(grep mtd3: /proc/mtd|if read line; then set $line;echo $4;fi)" ]; then
+mtd erase /dev/mtd/3
+fi
+else
+for V in ff_reset boot_wait; do
+eval "C=\$$V"
+C=$(httpd -d "$C")
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+test -n "$DIRTY" && uci commit>/dev/null 2>&1
+fi
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>L'AP est en train de
+red&eacute;marrer. Patientez SVP...</TD>
+</TR>
+</TABLE>
+EOF
+
+if [ "$ff_reset" = "failsafe" ]; then
+
+cat<<EOF
+<IMG
+ALT="51 secondes..."
+HEIGHT="8" SRC="../images/progress51.gif" VSPACE="10" WIDTH="255" TITLE="51 secondes...">
+<P>
+<B>Astuce</B>&nbsp;: En mode failsafe, l'adresse IP du
+point d'acc&egrave;s est toujours <CODE>192.168.1.1</CODE>. Pendant que
+vous attendez que l'AP se rallume, la carte r&eacute;seau peut &ecirc;tre
+reconfigurer avec une adresse appropri&eacute;e par exemple&nbsp;: <CODE>192.168.1.2</CODE>.</P>
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+setTimeout("location.href='http://192.168.1.1/'", 51000);
+//--></SCRIPT>
+EOF
+
+elif [ "$ff_reset" = "format" ] || [ "$ff_reset" = "killnvram" ]; then
+
+cat<<EOF
+<IMG
+ALT="136 secondes..."
+HEIGHT="8" SRC="../images/progress136.gif" VSPACE="10" WIDTH="255" TITLE="136 secondes...">
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 136000);
+//--></SCRIPT>
+EOF
+
+else
+
+cat<<EOF
+<IMG
+ALT="51 secondes..."
+HEIGHT="8" SRC="../images/progress51.gif" VSPACE="10" WIDTH="255" TITLE="51 secondes...">
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(uci get network.lan.ipaddr)/':'/')", 51000);
+//--></SCRIPT>
+EOF
+
+fi
+sh -c "sleep 2;reboot">/dev/null 2>&1 &
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

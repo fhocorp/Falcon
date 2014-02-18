@@ -1,0 +1,278 @@
+#!/bin/sh
+
+export DATE="17.01.2008";SCRIPT=${0#/rom}
+export TITLE="OLSR"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>OLSR</H1>
+<P>Cette page vous permet de configurer le service OLSR. OLSR permet de cr&eacute;er des r&eacute;seaux mesh.</P>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+ff_qoslev="$(nvram get ff_qoslev)"
+ff_hyst="$(nvram get ff_hyst)"
+ff_policyrt="$(nvram get ff_policyrt)"
+ff_nameservice="$(nvram get ff_nameservice)"
+ff_arprefresh="$(nvram get ff_arprefresh)"
+ff_httpinfo="$(nvram get ff_httpinfo)"
+ff_bmf="$(nvram get ff_bmf)"
+ff_fisheye="$(nvram get ff_fisheye)"
+ff_rfisheye="$(nvram get ff_rfisheye)"
+ff_olsrtc="$(nvram get ff_olsrtc)"
+
+cat<<EOF
+<FORM ACTION="olsrd.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR
+TITLE="Dans le cas ou l'on préfère joindre un nœud OLSR de manière indirecte, on choisi d'ignorer les messages de contrôle OLSR issu de ce nœud. Séparer les adresses IP par des points virgules.">
+<TD>Filtrage
+OLSR&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_ign" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_ign)"></TD>
+</TR>
+<TR
+TITLE="Un serveur du réseau filaire peut être joint à partir du réseau OLSR. Entrer l'adresse IP source et l'adresse IP destination séparée par un ':'. Séparer plusieurs entrées par des points virgule ';'.">
+<TD>Redirection
+vers la DMZ&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_dmz" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_dmz)">
+</TD>
+</TR>
+<TR
+TITLE="This setting announces a service using an extension of the OLSR nameservice plugin. This will fill the list on the 'Service' page. Format : URL|Protocol|Description. The URL (http://ip :80/, ftp://addr :21/xy/, gopher ://ip :70/) must include an IP address reachable throughout the mesh network and a port number. Protocol is 'tcp' or 'udp'. Separate the fields with a pipe character. Separate multiple entires by semicolon.">
+<TD>Services
+OLSR&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_service" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_service)">
+EOF
+
+if [ -x /etc/init.d/S*dnsmasq ];then
+
+cat<<EOF
+</TD>
+</TR>
+<TR
+TITLE="Grâce à DHCP, un client dans le voisinage du point d'accès peut se voir attribuer une adresse IP. Entrer une plage d'adresse IP et le masque de sous-réseau correspondant, par exemple '172.31.5.32/28,255.255.255.0'. Après application du masque DHCP-IP, l'adresse IP du point d'accès est joignable. La configuration du NAT/Masquerading tiendra compte de cette plage d'adresse. Si un client sans fil obtient une adresse IP du point d'accès par ce moyen, ce client pourra utiliser le réseau OLSR sans lui même lancer le démon OLSR. Séparer plusieurs plages éventuelles par des points virgule. Pour éviter les conflits réserver dès maintenant vos plages d'adresse OLSR (comme à BERLIN par exemple, genre annuaire).">
+<TD>DHCP OLSR&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_wldhcp" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_wldhcp)"></TD>
+</TR>
+<TR STYLE="display:none"
+TITLE="Autorise seulement l'accès au Web et au courier pour les utilisateurs DHCP. Affiche aussi une page explicative à ces utilisateurs ainsi limités.">
+<TD>Services
+DHCP&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_wldhcpfw" TYPE="RADIO" VALUE="0"$(if [ "$ff_wldhcpfw" != "1" ];then echo ' checked="checked"';fi)>Tout&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_wldhcpfw" TYPE="RADIO" VALUE="1"$(if [ "$ff_wldhcpfw" = "1" ];then echo ' checked="checked"';fi)>Seulement le web
+et le courrier
+EOF
+
+fi
+
+cat<<EOF
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="3">&nbsp;</TD>
+</TR>
+<TR
+TITLE="Grâce à ce champ, une plage d'adresse IP joignable par le point d'accès peut être publiée par OLSR. Ce peut être une sortie vers l'Internet (0.0.0.0/0) voir même une simple adresse IP (i.e. 172.31.1.2/32) pour un PDA sans fil sans OLSR. Séparer plusieurs plages par un point virgule.">
+<TD>HNA4&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_hna4" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_hna4)"></TD>
+</TR>
+<TR
+TITLE="Change l'adresse de broadcast des annonces OLSR. laisser ce champ vide pour utiliser le broadcast de l'interface.">
+<TD>IPV4 Broadcast&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_ip4broad" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_ip4broad)"></TD>
+</TR>
+<TR STYLE="display:none"
+TITLE="En usage normal, ce sont l'adresse IP et le masque de sous-réseau de l'interface sans fil qui fixent le paramétrage du réseau OLSR. Toutes les interfaces avec une adresse IP appartenant à ce réseau seront configurée pour être utilisées par OLSR. Exemple : '10.0.0.0/8'.">
+<TD>R&eacute;sau
+OLSR&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_net" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_net)"></TD>
+</TR>
+<TR
+TITLE="Fréquence de base des échanges de message OLSR : 2 secondes pour des réseaux de taille moyenne et mobiles, 5 secondes (valeur par défaut) pour des réseaux plus étoffés.">
+<TD>Rythme
+OLSR (Heart Beat)&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_olsrspeed" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_olsrspeed)"></TD>
+</TR>
+<TR
+TITLE="Régler la 'bonne volonté' (Willingness) du nœud entre 0 et 7. laisser ce champ vide pour une gestion dynamique selon l'état de la batterie par exemple.">
+<TD>Bonne
+Volont&eacute;&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_will" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_will)"></TD>
+</TR>
+<TR
+TITLE="Les nœuds qui utilisent OLSR standard ne communiquent pas avec ceux qui ont mis en place le contrôle de qualité du lien. En mode 'Désactivé', c'est le protocole RFC OLSR Standard qui est utilisé. En mode 'Activé', le protocole OLSR améliore la détection de qualité du lien.">
+<TD>Protocole LQ-QoS (ETX)&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_qoslev" ONCLICK="for(var i=0;i<this.form.ff_hyst.length;i++)this.form.ff_hyst[i].disabled=true;this.form.ff_scale.disabled=true;this.form.ff_thrh.disabled=true;this.form.ff_thrl.disabled=true;" TYPE="RADIO" VALUE="2"$(if [ "$ff_qoslev" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_qoslev" ONCLICK="for(var i=0;i<this.form.ff_hyst.length;i++)this.form.ff_hyst[i].disabled=false;this.form.ff_scale.disabled=false;this.form.ff_thrh.disabled=false;this.form.ff_thrl.disabled=false;" TYPE="RADIO" VALUE="0"$(if [ "$ff_qoslev" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="Ce champ diminue la valeur de qualité de lien (LQ) d'un voisin OLSR particulier. Si deux voisins qui possèdent une valeur de qualité de lien presque identique, ce champ permet d'éviter des changements de route intempestifs. Par exemple : '104.1.2.3:0.5' permet de réduire les probabilité de choix d'une route à travers cette station s'il existe des voisins avec une valeur LQ supérieure à 0.5. Entrer une adresse IP immédiatement suivie par un double point et une valeur comprise entre 0.1 et 1.0. Séparer plusieurs entrées par des points virgules.">
+<TD>OLSR LQ-Multiplier&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_lqmult" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_lqmult)"></TD>
+</TR>
+<TR
+TITLE="L'Hystérésis permet de calculer de manière plus sûr la qualité des liens avec le voisinage, mais peux retarder l'activation des liens. Valeur par défaut : Active.">
+<TD>Hyst&eacute;r&eacute;sis&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_hyst" TYPE="RADIO" VALUE="yes"$(if [ "$ff_hyst" = "yes" ];then echo ' checked="checked"';fi)$(if [ "$ff_qoslev" != "0" ];then echo ' disabled="disabled"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_hyst" TYPE="RADIO" VALUE="no"$(if [ "$ff_hyst" != "yes" ];then echo ' checked="checked"';fi)$(if [ "$ff_qoslev" != "0" ];then echo ' disabled="disabled"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="Change la vitesse d'activation/désactivation des liens voisins. Valeur décimale entre 0.1 et 0.9. Laisser cette valeur à 0.5 qui est la valeur conseillée de la RFC.">
+<TD>Fr&eacute;quence
+de l'Hyst&eacute;r&eacute;sis&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_scale" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_scale)"$(if [ "$ff_qoslev" != "0" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Si la valeur d'Hystérésis passe au dessus de cette valeur le lien est activé. Valeur décimale entre 0.1 et 0.9 (cette valeur doit être supérieure a la borne inférieure). Laisser cette valeur à 0.8 qui est la valeur conseillée de la RFC.">
+<TD>Seuil Sup&eacute;rieur&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_thrh" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_thrh)"$(if [ "$ff_qoslev" != "0" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Si la valeur d'Hystérésis passe au dessous de cette valeur, le lien est désactivé. Valeur décimale entre 0.1 et 0.9 (cette valeur doit être inférieure à la borne supérieure). Laisser cette valeur à 0.3 qui est la valeur conseillée de la RFC.">
+<TD>Seuil Inf&eacute;rieur&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_thrl" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_thrl)"$(if [ "$ff_qoslev" != "0" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Activates Policy Routing ('my own gateway for me !') and deactivates the DynGW plugin. Ce plugin permet d'activer/désactiver automatiquement les passerelles selon l'état de la connexion.">
+<TD>Policy Routing&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_policyrt" TYPE="RADIO" VALUE="1" ONCLICK="this.form.ff_ping.disabled=true;"$(if [ "$ff_policyrt" = "1" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_policyrt" TYPE="RADIO" VALUE="0" ONCLICK="this.form.ff_ping.disabled=false;"$(if [ "$ff_policyrt" != "1" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="Définit les adresses à pinguer pour déterminer l'état de la connexion. Indiquer de préférence les serveurs DNS et MX du FAI afférents à la connexion qu'il s'agit de tester. Séparer plusieurs entrées par des points virgule ';'.">
+<TD>Adresses
+&agrave; pinguer&amp;n&nbsp;:</TD>
+<TD COLSPAN="2" WIDTH="64"><INPUT NAME="ff_ping" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_ping)"$(if [ "$ff_policyrt" = "1" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Ce plugin permet d'envoyer et de recevoir des noms DNS + GPS Position via des messages OLSR.">
+<TD>Nameservice&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="1"$(if [ "$ff_nameservice" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_nameservice" TYPE="RADIO" VALUE="0"$(if [ "$ff_nameservice" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="This plugin stores the MAC address of received OLSR messages in the ARP cache.">
+<TD>Arp
+Refresh&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_arprefresh" TYPE="RADIO" VALUE="1"$(if [ "$ff_arprefresh" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_arprefresh" TYPE="RADIO" VALUE="0"$(if [ "$ff_arprefresh" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="Ce plugin permet d'observer la configuration OLSR en se connectant au port 8080(seulement par le LAN).">
+<TD>Httpinfo&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="1"$(if [ "$ff_httpinfo" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_httpinfo" TYPE="RADIO" VALUE="0"$(if [ "$ff_httpinfo" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR STYLE="display:none"
+TITLE="This plugin realizes a multicast simulation via UDP.">
+<TD>Mcast
+Forward&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_bmf" TYPE="RADIO" VALUE="1"$(if [ "$ff_bmf" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_bmf" TYPE="RADIO" VALUE="0"$(if [ "$ff_bmf" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="Enables a high priority sending queue for OLSR packets. This option will slow down normal traffic a bit in order to have a more reliable routing.">
+<TD>Traffic
+Shapping (QoS) OLSR&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_olsrtc" TYPE="RADIO" VALUE="1"$(if [ "$ff_olsrtc" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_olsrtc" TYPE="RADIO" VALUE="0"$(if [ "$ff_olsrtc" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="Optimisation de l'algorithme de routage / inondation MPR pour réseau étendus géographiquement.">
+<TD>Routage
+Fisheye (routage en oeil de poisson)&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_fisheye" TYPE="RADIO" VALUE="1"$(if [ "$ff_fisheye" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_fisheye" TYPE="RADIO" VALUE="0"$(if [ "$ff_fisheye" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR
+TITLE="Optimisation de l'algorithme de Dijkstra pour réseau étendus géographiquement.">
+<TD>Algorithme
+Dijkstra optimis&eacute;&nbsp;:</TD>
+<TD WIDTH="64"><SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_rfisheye" TYPE="RADIO" VALUE="1"$(if [ "$ff_rfisheye" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN></TD>
+<TD><INPUT CLASS="radio" NAME="ff_rfisheye" TYPE="RADIO" VALUE="0"$(if [ "$ff_rfisheye" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;</TD>
+</TR>
+<TR>
+<TD COLSPAN="3">&nbsp;</TD>
+</TR>
+<TR>
+<TD COLSPAN="3" NOWRAP="nowrap"><INPUT NAME="post_olsr" TITLE="Appliquer ces paramètres. Ce nouveau paramétrage sera activé au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annule la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<P><B>Astuce 1</B>&nbsp;: Le r&eacute;glage
+de l'<CITE>adresse IP</CITE> et du <CITE>masque de sous r&eacute;seau</CITE>
+sur la page <A HREF="wifi.html">Sans fil</A> permet de d&eacute;terminer
+la plage d'adresse IP utilis&eacute;e pour OLSR. Il est possible de
+configurer une adresse IP additionnelle sur la page <A HREF="lan.html">LAN</A>
+et/ou la page <A HREF="wan.html">WAN</A> &agrave; partir de la plage
+d'adresse OLSR. Ainsi le traffic OLSR sera aussi transmis sur ces
+interfaces et la protection par firewall sera d&eacute;sactiv&eacute;e sur
+ces m&ecirc;mes interfaces. Il est g&eacute;n&eacute;ralement convenu
+d'utiliser un masque de sous r&eacute;seau plus restreint pour ces
+adresses IP OLSR additionnelles. Ainsi l'AP pourra &ecirc;tre joint sur
+ces adresses &agrave; partir d'une machine qui ne fait pas tourner elle m&ecirc;me
+OLSR. Pour des cas sp&eacute;ciaux d'utilisation, il est possible de
+partager la meme adresse IP sur les interfaces <A HREF="lan.html">LAN</A>
+et <A HREF="wifi.html">Sans fil</A>. Alors les interfaces LAN et Wireless
+seront alors li&eacute;es par un pont ethernet.</P>
+<P><B>Astuce2</B>&nbsp;:
+Offrir un acc&egrave;s Internet facilement &agrave; son voisinage c'est le
+but de ce firmware&nbsp;: brancher l'interface/port WAN (Internet) du
+point d'acc&egrave;s sur un routeur standard (genre freebox). Le routeur
+Internet va configurer automatiquement cette interface par DHCP. La sortie
+Internet va ensuite &ecirc;tre annonc&eacute;e gr&acirc;ce &agrave; un
+HNA4. Les r&egrave;gles de firewall sont d&eacute;j&agrave; pr&ecirc;tes
+pour ce service. Pour rendre possible l'acc&egrave;s Internet, &quot;dyn_gw_plugin&quot;
+est activ&eacute; au lancement du d&eacute;mon OLSR. Ce plugin va
+s'assurer que la connectivit&eacute; Internet est bien pr&eacute;sente en
+lan&ccedil;ant un requ&ecirc;te 'arp' afin d'&eacute;ventuellement d&eacute;sactiver
+le HNA4 s'il n'y a pas de connexion au Net.</P>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_olsr" ]; then
+add=
+test -x /etc/init.d/S*dnsmasq && add="$add ff_wldhcp ff_wldhcpfw"
+for V in $add ff_ign ff_dmz ff_service ff_hna4 ff_ip4broad ff_olsrspeed ff_will ff_qoslev ff_lqmult ff_hyst ff_scale ff_thrh ff_thrl ff_policyrt ff_ping ff_nameservice ff_arprefresh ff_httpinfo ff_bmf ff_fisheye ff_rfisheye ff_olsrtc; do
+eval "C=\$$V"
+C=$(httpd -d "$C")
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>
+Les
+changements sont activ&eacute;s. Les param&egrave;tres seront utilis&eacute;s
+au prochain <A HREF="reset.html">Red&eacute;marrage</A>.  </TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Aucun changement dans la
+configuration.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

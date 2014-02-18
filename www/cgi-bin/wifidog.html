@@ -1,0 +1,113 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Administration&nbsp;: Wifidog"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Administration&nbsp;: Wifidog</H1>
+<P><UL>
+EOF
+echo '<li>&Eacute;tat du portail wifidog : '
+if test -f /usr/bin/wifidog -a -f /tmp/wifidog.conf ; then
+echo '<font color="green">[install&eacute;: '"$(wifidog -v)"']</font>'
+install=ok
+else
+echo '<font color="red">[non install&eacute;]</font>'
+fi
+if ps|grep -q '/usr/bin/[w]ifidog'
+then
+echo '<font color="green">[d&eacute;marr&eacute;]</font>'
+start=ok
+else
+echo '<font color="red">[arr&ecirc;t&eacute;]</font>'
+fi
+echo '</li>'
+if ps|grep -q '/usr/bin/[w]ifidog'
+then
+echo '<li><a href="wifidog-stop.html">Arr&ecirc;ter</a> wifidog / <a href="wifidog-start.html?restart=1">red&eacute;marrer</a> wifidog</li>'
+else
+echo '<li><a href="wifidog-start.html">D&eacute;marrer wifidog</a></li>'
+fi
+
+
+ff_adm_network=$(nvram get ff_adm_network)
+if [ -z $ff_adm_network ]; then
+ff_adm_network="default-network"
+fi
+
+if [ ! -e /tmp/network_list.php ]; then 
+wget http://auth.wireless-fr.org/network_list.php -P /tmp/ > /dev/null 2>&1
+if [ $? -eq 1 ] ;then
+rm -f /tmp/network_list.php
+fi
+fi
+if [ ! -e /tmp/network_list.php ]; then
+network="</TR><TR TITLE=\"R&eacute;seau d'appartenance.\"> <TD>R&eacute;seau&nbsp;:</TD><TD><INPUT NAME=\"ff_adm_network\" SIZE=\"48\" STYLE=\"width: 100%;\" TYPE=\"TEXT\" DISABLED VALUE=\"$ff_adm_network\"></TD>"
+else
+network="</TR><TR TITLE=\"R&eacute;seau d'appartenance.\"> <TD>R&eacute;seau&nbsp;:</TD><TD><select name=\"ff_adm_network\" >"
+script=$(echo "s/id=\(.*\);name=\(.*\);/<option value=\"\1\">\2<\/option>/;s/<option value=\"$ff_adm_network\">\(.*\)<\/option>/<option value=\"$ff_adm_network\" selected>\1<\/option>/")
+network="$network$(sed -e "$script" /tmp/network_list.php)"
+network="$network</select></TD>"
+fi
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="wifidog.html" METHOD="POST"><TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0"
+CLASS="formfixwidth"><TR
+TITLE="Entrez un Pseudo (court, pour IRC ou Chat etc.)">
+<TD>Surnom&nbsp;:</TD>
+<TD><INPUT NAME="ff_adm_nick" SIZE="48" STYLE="width: 100%;" TYPE="TEXT" VALUE="$(nvram get ff_adm_nick)"></TD>
+</TR>
+$(echo $network)
+</TR><TR
+TITLE="Nom du Noeud Wifidog">
+<TD>Nom du Noeud Wifidog&nbsp;:</TD><TD><INPUT NAME="ff_adm_node" SIZE="48" STYLE="width: 100%;" TYPE="TEXT" VALUE="$(nvram get ff_adm_node)"></TD>
+</TR><TR
+TITLE="Attention si vous désactivez le PROXY les connections de votre hotspot ne seront plus loguées.">
+<TD>D&eacute;sactivation du PROXY&nbsp;:</TD><TD><INPUT NAME="ffw_noproxy" TYPE="CHECKBOX" VALUE="1"$(if [ "$(nvram get ffw_noproxy)" = "1" ];then echo ' checked="checked"';fi)></TD>
+</TR><TR><TD COLSPAN="2">&nbsp;</TD>
+</TR><TR><TD COLSPAN="2"><INPUT NAME="post_adress" TITLE="Appliquer ces paramètres. Ces nouveaux paramètres seront activ&eacute;s au prochain red&eacute;marrage de wifidog." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_adress" ]; then
+for V in ff_adm_nick ff_adm_node ff_adm_network ffw_noproxy; do
+eval "C=\$$V"
+C=$(httpd -d "$C")
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Les param&egrave;tres sont enregistr&eacute;s.
+Ils sont activ&eacute;s.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Aucun changement effectu&eacute;.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

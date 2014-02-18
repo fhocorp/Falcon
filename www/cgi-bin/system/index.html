@@ -1,0 +1,37 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Syst&egrave;me"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Syst&egrave;me</H1>
+<NOSCRIPT>
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>L'activation
+de Javascript est n&eacute;cessaire pour recharger automatiquement la
+page de d&eacute;marrage pendant un <A HREF="/cgi-bin/reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE></NOSCRIPT>
+<H2>R&eacute;capitulatif</H2>
+<TABLE id="resume">
+<TR><TH COLSPAN="2"><A HREF="address.html"><H2>Contact</H2></A></TH></TR>
+<TR><TD><B>Surnom</B></TD><TD>$(nvram get ff_adm_nick)</TD></TR>
+<TR><TD><B>Nom</B></TD><TD>$(nvram get ff_adm_name)</TD></TR>
+<TR><TD><B>Email</B></TD><TD>$(nvram get ff_adm_mail)</TD></TR>
+<TR><TD><B>R&eacute;seau</B></TD><TD>$(nvram get ff_adm_network)</TD></TR>
+<TR><TD><B>Latitude</B></TD><TD>$(nvram get ffw_adm_lat)</TD></TR>
+<TR><TD><B>Longitude</B></TD><TD>$(nvram get ffw_adm_lon)</TD></TR>
+<TR><TH COLSPAN="2"><A HREF="system.html"><H2>Syst&egrave;me</H2></A></TH></TR>
+<TR><TD><B>Nom de d'h&ocirc;te</B></TD><TD>$(nvram get wan_hostname)</TD></TR>
+<TR><TD><B>Nom de domaine</B></TD><TD>$(nvram get wan_domain)</TD></TR>
+</TABLE>
+
+<P><B>Astuce</B>&nbsp;:
+Appuyer sur <KBD STYLE="text-decoration: blink;">[F1]</KBD> ou d&eacute;placer
+doucement la souris sur les zones de contr&ocirc;le pour afficher un petit
+message d'aide.</P>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

@@ -1,0 +1,129 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="FON : avanc&eacute;"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>FON : avanc&eacute;</H1>
+<P>Cette page vous permet de modifier la configuration wifi de votre routeur.
+</P>
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR
+TITLE="Fixer le BSSID (par exemple '00:18:84:d0:08:7d') pour que FON prend en compte le HOTSPOT.">
+<TD>ESSID&nbsp;:</TD>
+<TD><INPUT NAME="network.hotspot.macaddr" SIZE="48" TYPE="TEXT" VALUE="$(uci get network.hotspot.macaddr)"></TD>
+</TR>
+<TR
+TITLE="Entrer un numéro de canal entre 1 et 13. Dans certains pays (USA) les canaux 12 et 13 sont interdits. Le Japon peut utiliser aussi le canal 14.">
+<TD>Canal&nbsp;:</TD>
+<TD><INPUT NAME="wl0_channel" SIZE="48" TYPE="TEXT" VALUE="$(uci get wireless.wl0.channel)"></TD>
+</TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_wifi" TITLE="Appliquer ces changements. Les paramètres seront utilisés au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+</FORM>
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
+function set_txmw()
+{
+document.wifiform.txmw.value=Math.round(Math.pow(10,document.wifiform.txpwr.value/40))
+}
+function set_txpwr()
+{
+document.wifiform.txpwr.value=4*Math.round(
++parseFloat(document.wifiform.regdbm.value)
++parseFloat(document.wifiform.loss.value)
+-parseFloat(document.wifiform.gain.value)
+);
+if(1>document.wifiform.txpwr.value)document.wifiform.txpwr.value=1;
+if(96<document.wifiform.txpwr.value)document.wifiform.txpwr.value=96;
+set_txmw();
+}
+function set_dbm()
+{
+if(1>document.wifiform.regmw.value)document.wifiform.regmw.value=1;
+if(251<document.wifiform.regmw.value)document.wifiform.regmw.value=251;
+document.wifiform.regdbm.value=Math.round(40*Math.log(document.wifiform.regmw.value)/Math.log(10))/4;
+set_txpwr();
+}
+function set_mw()
+{
+if(1>document.wifiform.regdbm.value)document.wifiform.regdbm.value=1;
+if(24<document.wifiform.regdbm.value)document.wifiform.regdbm.value=24;
+document.wifiform.regmw.value=Math.round(Math.pow(10,document.wifiform.regdbm.value/10));
+set_txpwr();
+}
+if(0<document.wifiform.wl0_txpwr.value)
+document.wifiform.txpwr.value=document.wifiform.wl0_txpwr.value;
+document.wifiform.gain.value = 0.25*Math.round(
++parseFloat(document.wifiform.regdbm.value)*4
++parseFloat(document.wifiform.loss.value)*4
+-parseFloat(document.wifiform.txpwr.value)
+);
+set_txmw();
+</SCRIPT>
+<P><B>Astuce</B>&nbsp;: Pour
+la plupart des AP, le param&eacute;trage <B>Antenne A</B> active
+l'antenne gauche (vu de devant).</P>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_wifi" ]; then
+case $wmode in
+master)
+wl0_mode=ap
+wl0_infra=1
+;;
+client)
+wl0_mode=sta
+wl0_infra=1
+;;
+*)
+wl0_mode=sta
+wl0_infra=0
+;;
+esac
+for V in network.hotspot.macaddr wl0_mode wl0_infra wl0_ssid ff_bssid wl0_channel wl0_antdiv wl0_txant wl0_gmode wl0_closed wl0_rateset wl0_rate wl0_mrate wl0_gmode_protection wl0_frameburst wl0_bcn wl0_dtim wl0_frag wl0_rts wl0_phytype wl0_txpwr ff_txpwroverride wl0_distance ff_mtu; do
+eval "C=\$$V"
+C=$(httpd -d "$C")
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+if checkbridge; then
+DIRTY=1
+fi
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Les
+changements sont enregistr&eacute;s. Le nouveau param&eacute;trage sera
+utilis&eacute; au prochain <A HREF="/cgi-bin/reset.html">red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Aucun changement effectu&eacute;.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

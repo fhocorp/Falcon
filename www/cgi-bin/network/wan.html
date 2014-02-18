@@ -1,0 +1,132 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Internet"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Internet</H1>
+<P>Cette page vous permet de configurer la connexion internet de votre routeur.</P>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+wan_ifname="$(nvram get wan_ifname)"
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+wan_proto="$(nvram get wan_proto)"
+wan_ports="$(nvram get $wan_ifname'ports')"
+
+cat<<EOF
+<SCRIPT TYPE="text/javascript"><!--
+function init() {
+affiche_proto('$wan_proto');
+}
+function affiche_proto(proto) {
+if (proto=="static" || proto=="olsr") {
+formulaire = "<TR><TD>Adresse IP&nbsp;:</TD><TD><INPUT NAME=\"wan_ipaddr\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_ipaddr)\"></TD></TR><TR TITLE=\"Le masque de sous-r&eacute;seau indique quelles adresses IP sont joignable directement (&agrave; partir de l'interface Internet).\"><TD>Masque de sous r&eacute;seau&nbsp;:</TD><TD><INPUT NAME=\"wan_netmask\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_netmask)\"></TD></TR><TR TITLE=\"Route par d&eacute;faut pour le raccordement &agrave; l'Internet.\"><TD>Route par d&eacute;faut WAN&nbsp;:</TD><TD><INPUT NAME=\"wan_gateway\" SIZE=\"32\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_gateway)\"></TD></TR>";
+}
+else if (proto=="pppoe") {
+
+formulaire="<TR TITLE=\"Nom d'utilisateur fourni par votre fournisseur d'acc&egrave;s Internet.\"><TD>Nom d'utilisateur&nbsp;:</TD><TD><INPUT NAME=\"ppp_username\" SIZE=\"48\" TYPE=\"TEXT\" VALUE=\"$(nvram get ppp_username)\"></TD></TR><TR TITLE=\"Mot de passe du compte Internet.\"><TD>Mot de passe&nbsp;:</TD><TD><INPUT NAME=\"ppp_passwd\" SIZE=\"48\" TYPE=\"PASSWORD\" VALUE=\"$(nvram get ppp_passwd)\"></TD></TR><TR TITLE=\"Connexion &agrave; la demande lance la connexion au moment d'un acc&egrave;s Internet. Si aucune activit&eacute; n'est d&eacute;tect&eacute;e la connexion est coup&eacute;e apr&egrave;s le temps sp&eacute;cifi&eacute;.\"><TD>Connexion &agrave; la demande&nbsp;:</TD><TD><INPUT CLASS=\"radio\" NAME=\"ppp_demand\" TYPE=\"RADIO\" VALUE=\"1\"$(if [ "$(nvram get ppp_demand)" = "1" ];then echo ' checked=\"checked\"';fi)><INPUT MAXLENGTH=\"4\" NAME=\"ppp_idletime\" SIZE=\"5\" TYPE=\"TEXT\" VALUE=\"$(nvram get ppp_idletime)\">Min. (Inactivit&eacute;)</TD></TR><TR TITLE=\"Avec l'option 'Rester Connect&eacute;', le point d'acc&egrave;s va v&eacute;rifier la connexion et se reconnecter au besoin. Laisser la valeur par défaut de 30 secondes.\"><TD>Rester Connect&eacute;&nbsp;:</TD><TD><INPUT CLASS=\"radio\" NAME=\"ppp_demand\" TYPE=\"RADIO\" VALUE=\"0\"$(if [ "$(nvram get ppp_demand)" != "1" ];then echo ' checked=\"checked\"';fi)><INPUT MAXLENGTH=\"4\" NAME=\"ppp_redialperiod\" SIZE=\"5\" TYPE=\"TEXT\" VALUE=\"$(nvram get ppp_redialperiod)\">Sec. (P&eacute;riode de r&eacute;essai)</TD></TR><TR><TD COLSPAN=\"2\">&nbsp;</TD></TR><TR TITLE=\"Option : Identifiant du pair distant, on laisse ce champ généralement vide.\"><TD>Concentrateur d'Acc&egrave;s&nbsp;:</TD><TD><INPUT NAME=\"ppp_ac\" SIZE=\"48\" TYPE=\"TEXT\" VALUE=\"$(nvram get ppp_ac)\"></TD></TR><TR TITLE=\"Option : Identifiant du modem ADSL, s'il faut choisir entre plusieurs modems présents. On laisse ce champ vide en général.\"><TD>Nom du Service&nbsp;:</TD><TD><INPUT NAME=\"ppp_service\" SIZE=\"48\" TYPE=\"TEXT\" VALUE=\"$(nvram get ppp_service)\"></TD></TR><TR TITLE=\"Option : Adresse IP du modem ADSL. On laisse ce champ vide généralement.\"><TD>IP Statique&nbsp;:</TD><TD><INPUT NAME=\"ppp_static_ip\" SIZE=\"48\" TYPE=\"TEXT\" VALUE=\"$(nvram get ppp_static_ip)\"></TD></TR><TR TITLE=\"Option : Maximum Transfer Unit, la valeur 1500 octets convient en général. Dans le cas de difficultés rencontrées pour se connecter à certains sites Web, essayer de diminuer cette valeur : 1492 par exemple.\"><TD>MTU&nbsp;:</TD><TD><INPUT MAXLENGTH=\"4\" NAME=\"wan_mtu\" SIZE=\"48\" TYPE=\"TEXT\" VALUE=\"$(nvram get wan_mtu)\"></TD></TR><TR><TD COLSPAN=\"2\">&nbsp;</TD></TR>"
+}
+else {
+formulaire = "";
+}
+document.getElementById('proto').innerHTML = formulaire;
+
+}
+//--></SCRIPT>
+<FORM ACTION="wan.html" METHOD="POST"><TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"><TR
+TITLE="Configure le mode de fonctionnement du port Internet (port RJ45 isolé). Si le paquetage PPPoE est installé, le mode 'PPPoE' lance le démon PPPoE automatiquement.">
+<TD>Protocole&nbsp;:</TD>
+<TD><SELECT NAME="wan_proto" ONCHANGE="affiche_proto(this.value);">
+<OPTION
+VALUE='dhcp' $(test "$wan_proto" = "dhcp" && echo "selected=selected")>Server DHCP &agrave;
+utiliser</OPTION>
+<OPTION
+VALUE='static' $(test "$wan_proto" = "static" && echo "selected=selected")>Statique</OPTION>
+<OPTION
+VALUE='olsr' $(test "$wan_proto" = "olsr" && echo "selected=selected")>OLSR</OPTION>
+<OPTION
+VALUE='pppoe' $(test "$wan_proto" = "pppoe" && echo "selected=selected")>PPPoE</OPTION>
+<OPTION
+VALUE='disabled' $(test "$wan_proto" = "disabled" && echo "selected=selected")>D&eacute;sactiv&eacute;</OPTION>
+</SELECT> </TD>
+</TR>
+<TD TITLE="Adresse IP de l'interface Internet (RJ45)." id="proto" COLSPAN="2">
+</TD>
+<TR
+TITLE="Il est possible d'utiliser plus d'un connecteur RJ45 comme interface de connexion à l'internet. Par exemple : '0 1 5' ponte le connecteur 'Internet' et le connecteur numéro '1'. La valeur par défaut est : '0 5'.">
+<TD>Connecteurs RJ45&nbsp;:</TD><TD><INPUT NAME="wan_ports" SIZE="32" TYPE="TEXT" VALUE="$wan_ports"$(if [ -z "$wan_ifname" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR><TD COLSPAN="2">&nbsp;</TD>
+</TR><TR
+TITLE="Autoriser l'accès SSH au point d'accès depuis l'internet.">
+<TD>Accepter
+les connexions ssh &agrave; partir de l'Internet&nbsp;:</TD><TD><INPUT NAME="ff_wanssh" TYPE="CHECKBOX" VALUE="1"$(if [ "$(nvram get ff_wanssh)" = "1" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+<TR
+TITLE="Autoriser l'accès aux pages WEB du point d'accès à partir de l'internet.">
+<TD>Autoriser
+HTTP&nbsp;:</TD><TD><INPUT NAME="ff_wanhttp" TYPE="CHECKBOX" VALUE="1"$(if [ "$(nvram get ff_wanhttp)" = "1" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+<TR
+TITLE="S'autoriser à r&eacute;pondre aux requetes ICMP provenant de l'internet.">
+<TD>Autoriser
+le Ping&nbsp;:</TD><TD><INPUT NAME="ff_wanicmp" TYPE="CHECKBOX" VALUE="1"$(if [ "$(nvram get ff_wanicmp)" = "1" ];then echo ' checked="checked"';fi)></TD>
+</TR>
+<TR><TD COLSPAN="2">&nbsp;</TD>
+</TR><TR><TD COLSPAN="2"><INPUT NAME="post_wan" TITLE="Appliquer les param&egrave;tres. Ils seront effectifs au prochain red&eacute;marrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler cette page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<P><B>Note :</B> Si vous choisissez le protocole PPPoE, vous devez vous rendre sur la page de <A HREF="pppoecd.html">configuration de PPPoE</A> afin de terminer la configuration.</P>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_wan" ]; then
+wan_ifname=$(nvram get wan_ifname)
+wan_device=$(nvram get wan_device)
+if [ "pppoe" = "$wan_proto" ]; then
+wan_device=$wan_ifname
+wan_ifname=ppp0
+else
+wan_ifname=$wan_device
+fi
+for V in wan_proto wan_ifname wan_device wan_ipaddr wan_netmask wan_gateway wan_ports ff_wanssh ff_wanhttp ff_wanicmp; do
+eval "C=\$$V"
+C=$(unescape $C)
+test "$V" = "wan_ports" && V=$wan_ifname'ports'
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Les
+changements sont activ&eacute;s. Les param&egrave;tre seront utilis&eacute;s
+au prochain <A HREF="/cgi-bin/reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Aucun
+changement dans la configuration.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

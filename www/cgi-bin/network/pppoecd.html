@@ -1,0 +1,158 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Administration&nbsp;: PPPoE"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Administration&nbsp;: PPPoE</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+wan_proto="$(nvram get wan_proto)"
+
+cat<<EOF
+<FORM ACTION="pppoecd.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR
+TITLE="Nom d'utilisateur fourni par votre fournisseur d'accès Internet.">
+<TD>Nom d'utilisateur&nbsp;:</TD>
+<TD><INPUT NAME="ppp_username" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ppp_username)"></TD>
+</TR>
+<TR
+TITLE="Mot de passe du compte Internet.">
+<TD>Mot
+de passe&nbsp;:</TD>
+<TD><INPUT NAME="ppp_passwd" SIZE="48" TYPE="PASSWORD" VALUE="$(nvram get ppp_passwd)"></TD>
+</TR>
+<TR
+TITLE="Connexion à la demande lance la connexion au moment d'un accès Internet. Si aucune activité n'est détectée la connexion est coupée après le temps spécifié.">
+<TD>Connexion
+&agrave; la demande&nbsp;:</TD>
+<TD><INPUT CLASS="radio" NAME="ppp_demand" TYPE="RADIO" VALUE="1"$(if [ "$(nvram get ppp_demand)" = "1" ];then echo ' checked="checked"';fi)><INPUT MAXLENGTH="4" NAME="ppp_idletime" SIZE="5" TYPE="TEXT" VALUE="$(nvram get ppp_idletime)">
+Min.
+(Inactivit&eacute;)</TD>
+</TR>
+<TR
+TITLE="Avec l'option 'Rester Connecté' le point d'accès va vérifier la connexion et se reconnecter au besoin. Laisser la valeur par défaut de 30 secondes.">
+<TD>Rester
+Connect&eacute;&nbsp;:</TD>
+<TD><INPUT CLASS="radio" NAME="ppp_demand" TYPE="RADIO" VALUE="0"$(if [ "$(nvram get ppp_demand)" != "1" ];then echo ' checked="checked"';fi)><INPUT MAXLENGTH="4" NAME="ppp_redialperiod" SIZE="5" TYPE="TEXT" VALUE="$(nvram get ppp_redialperiod)">
+Sec.
+(P&eacute;riode de r&eacute;essai)</TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR
+TITLE="Option : Identifiant du pair distant, on laisse ce champ généralement vide.">
+<TD>Concentrateur
+d'Acc&egrave;s&nbsp;:</TD>
+<TD><INPUT NAME="ppp_ac" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ppp_ac)"></TD>
+</TR>
+<TR
+TITLE="Option : Identifiant du modem ADSL, s'il faut choisir entre plusieurs modems présents. On laisse ce champ vide en général.">
+<TD>Nom du Service&nbsp;:</TD>
+<TD><INPUT NAME="ppp_service" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ppp_service)"></TD>
+</TR>
+<TR
+TITLE="Option : Adresse IP du modem ADSL. On laisse ce champ vide généralement.">
+<TD>IP Statique&nbsp;:</TD>
+<TD><INPUT NAME="ppp_static_ip" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ppp_static_ip)"></TD>
+</TR>
+<TR
+TITLE="Option : Maximum Transfer Unit, la valeur 1500 octets convient en général. Dans le cas de difficultés rencontrées pour se connecter à certains sites Web, essayer de diminuer cette valeur : 1492 par exemple.">
+<TD>MTU&nbsp;:</TD>
+<TD><INPUT MAXLENGTH="4" NAME="wan_mtu" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wan_mtu)"></TD>
+</TR>
+<TR
+TITLE="Interface with IP address and firewall configuration: 'ppp0' by default.">
+<TD>Interface&nbsp;:</TD>
+<TD><INPUT MAXLENGTH="8" NAME="wan_ifname" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wan_ifname)"></TD>
+</TR>
+<TR
+TITLE="Physical device for PPPoE communication: 'vlan1' in most cases.">
+<TD>Device&nbsp;:</TD>
+<TD><INPUT MAXLENGTH="8" NAME="wan_device" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wan_device)"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_pppoecd" TITLE="Appliquer les paramètres. Ils seront effectifs au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler cette page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+if [ -n "$(ip -f inet addr show dev ppp0 2>&-)" ]; then
+eval $(ip -f inet addr show dev ppp0|sed -n '
+2{
+h
+s/.*inet \+\([0-9\.]*\).*/ADDR=\1/
+p
+g
+s/.*peer \+\([0-9\.]*\).*/PEER=\1/
+p
+}
+')
+
+cat<<EOF
+<P> <B>State</B>&nbsp;:
+La connexion PPPoE est active. L'adresse de l'interface est $ADDR et
+l'adresse distante est $PEER.</P>
+EOF
+
+else
+
+cat<<EOF
+<P>
+<B>State</B>&nbsp;:
+La connexion PPPoE n'est pas active.</P>
+EOF
+
+fi
+else
+IFS=\&;set $QUERY_STRING;unset IFS;eval $*
+DIRTY=
+if [ -n "$post_pppoecd" ]; then
+for V in wan_ifname wan_device wan_mtu ppp_passwd ppp_username ppp_demand ppp_ac ppp_idletime ppp_redialperiod ppp_service ppp_static ppp_static_ip; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Les
+changements sont activ&eacute;s. Les param&egrave;tre seront utilis&eacute;s
+au prochain <A HREF="../reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Aucun changement dans la
+configuration.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Statistique&nbsp;:
+Syst&egrave;me"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Statistique&nbsp;:
+Syst&egrave;me</H1>
+<FORM NAME="RangeForm"><TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="form" CELLPADDING="0" CELLSPACING="0">
+<TBODY><TR><TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-4h" CHECKED="CHECKED">4 derni&egrave;res heures&nbsp;</TD><TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-24h">24 derni&egrave;res heures&nbsp;</TD><TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-7d">7 derniers jours&nbsp;</TD><TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-4w">4 derni&egrave;res semaines&nbsp;</TD>
+<TD><INPUT TYPE="SUBMIT" VALUE="Afficher"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+echo "<!--"
+/usr/bin/rrdcgi /www/rrd3
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

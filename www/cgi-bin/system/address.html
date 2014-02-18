@@ -1,0 +1,103 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Administration&nbsp;: 
+Contact"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+ff_adm_network=$(nvram get ff_adm_network)
+if [ -z $ff_adm_network ]; then
+ff_adm_network="default-network"
+fi
+
+if [ ! -e /tmp/network_list.php ]; then 
+wget http://auth.wireless-fr.org/network_list.php -P /tmp/ > /dev/null 2>&1
+if [ $? -eq 1 ] ;then
+rm -f /tmp/network_list.php
+fi
+fi
+if [ ! -e /tmp/network_list.php ]; then
+network="</TR><TR TITLE=\"R&eacute;seau d'appartenance.\"> <TD>R&eacute;seau&nbsp;:</TD><TD><INPUT NAME=\"ff_adm_network\" SIZE=\"48\" STYLE=\"width: 100%;\" TYPE=\"TEXT\" DISABLED VALUE=\"$ff_adm_network\"></TD>"
+else
+network="</TR><TR TITLE=\"R&eacute;seau d'appartenance.\"> <TD>R&eacute;seau&nbsp;:</TD><TD><select name=\"ff_adm_network\" >"
+script=$(echo "s/id=\(.*\);name=\(.*\);/<option value=\"\1\">\2<\/option>/;s/<option value=\"$ff_adm_network\">\(.*\)<\/option>/<option value=\"$ff_adm_network\" selected>\1<\/option>/")
+network="$network$(sed -e "$script" /tmp/network_list.php)"
+network="$network</select></TD>"
+fi
+cat<<EOF
+<H1>Administration&nbsp;: Contact</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="address.html" METHOD="POST"><TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0"
+CLASS="formfixwidth"><TR
+TITLE="Entrez un Pseudo (court, pour IRC ou Chat etc.)">
+<TD>Surnom&nbsp;:</TD>
+<TD><INPUT NAME="ff_adm_nick" SIZE="48" STYLE="width: 100%;" TYPE="TEXT" VALUE="$(nvram get ff_adm_nick)"></TD>
+</TR><TR
+TITLE="Nom Pr&eacute;nom">
+<TD>Nom&nbsp;:</TD><TD><INPUT NAME="ff_adm_name" SIZE="48" STYLE="width: 100%;" TYPE="TEXT" VALUE="$(nvram get ff_adm_name)"></TD>
+</TR><TR
+TITLE="Email de l'administrateur de ce point d'accès">
+<TD>Email&nbsp;:</TD>
+<TD><INPUT NAME="ff_adm_mail" SIZE="48" STYLE="width: 100%;" TYPE="TEXT" VALUE="$(nvram get ff_adm_mail)"></TD>
+</TR><TR
+TITLE="Numéro de téléphone">
+<TD>T&eacute;l&eacute;phone&nbsp;:</TD>
+<TD><INPUT NAME="ff_adm_tel" SIZE="48" STYLE="width: 100%;" TYPE="TEXT" VALUE="$(nvram get ff_adm_tel)"></TD>
+</TR><TR
+TITLE="Situation géographique/Adresse">
+<TD>Localisation&nbsp;:</TD><TD><INPUT NAME="ff_adm_loc" SIZE="48" STYLE="width: 100%;" TYPE="TEXT" VALUE="$(nvram get ff_adm_loc)"></TD>
+$(echo $network)
+</TR><TR
+TITLE="Notes et remarques sur ce point d'accès. Le texte ne doit pas dépasser 500 caractères.">
+<TD>Notes&nbsp;:</TD><TD><TEXTAREA COLS="48" NAME="ff_adm_note" ROWS="3" STYLE="width: 100%;">$(nvram get ff_adm_note)</TEXTAREA></TD>
+</TR><TR><TD COLSPAN="2">&nbsp;</TD>
+</TR><TR><TD COLSPAN="2"><INPUT NAME="post_adress" TITLE="Appliquer ces paramètres. Les paramètres sont visibles immédiatement sur la page d'état." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<P><B>Astuce</B>&nbsp;:
+Les informations de cette page seront affich&eacute;es aux visiteurs du
+point d'acc&egrave;s sur la page de <A HREF="../../cgi-bin-contact.html">contact</A>.</P>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_adress" ]; then
+for V in ff_adm_nick ff_adm_name ff_adm_mail ff_adm_tel ff_adm_loc ff_adm_network ff_adm_note; do
+eval "C=\$$V"
+C=$(httpd -d "$C")
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Les param&egrave;tres sont enregistr&eacute;s.
+Ils sont activ&eacute;s.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Aucun changement effectu&eacute;.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

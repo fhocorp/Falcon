@@ -1,0 +1,20 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Administration"
+. ${SCRIPT%/*}/cgi-bin-index-pre.sh
+
+cat<<EOF
+<H1>Administration</H1>
+<P>Bienvenu sur la page d'administration de ce routeur.<BR>
+La partie administration est s&eacute;par&eacute;e en 3 grandes parties :</P>
+<UL>
+  <LI><B>Configuration r&eacute;seau :</B> permet de configurer les 3 interfaces r&eacute;seau de votre routeur : le sans-fil, le r&eacute;seau local et la connexion internet.</LI>
+  <LI><B>Op&eacute;rateurs :</B> permet de configurer les diff&eacute;rents services qui fonctionnent pour la 3G sur ce routeur.</LI>
+  <LI><B>Etat :</B> permet de voir l'&eacute;tat du syst&egrave;me ainsi que des statistiques.</LI>
+  <LI><B>Red&eacute;marrage :</B> permet de red&eacute;marrer le syst&eacute;me.</LI>
+</UL>
+
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

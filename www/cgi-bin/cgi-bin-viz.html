@@ -1,0 +1,48 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="OLSR Viz"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<NOSCRIPT>
+<H1>OLSR Viz</H1>
+<TABLE BORDER="0" CLASS="note"><TR><TD>No JavaScript - no Viz.</TD>
+</TR>
+</TABLE>
+<P>&nbsp;</P></NOSCRIPT>
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
+var css=document.styleSheets[0];
+if (null!=css.insertRule) {
+css.insertRule(".label {color:black;background-color:white}", css.cssRules.length);
+}
+else {
+css.addRule(".label", "color:black");
+css.addRule(".label", "background-color:white");
+}
+</SCRIPT>
+<SCRIPT SRC="olsr-viz.js" LANGUAGE="JavaScript1.2" TYPE="text/javascript"></SCRIPT>
+<DIV ID="main"
+STYLE="width: 100%; height: 500px; border: 1px solid #ccc; margin-left:auto; margin-right:auto; text-align:center; overflow: scroll">
+<DIV ID="edges" STYLE="width: 1px; height: 1px; position: relative; z-index:2"></DIV>
+<DIV ID="nodes" STYLE="width: 1px; height: 1px; position: relative; z-index:4"></DIV>
+</DIV>
+<DIV STYLE="z-index:99">
+<FORM ACTION="">
+<P><B TITLE="Définir le niveau de zoom.">Zoom</B>&nbsp;<A HREF="javascript:set_scale(scale+0.1)">+</A>&nbsp;<A HREF="javascript:set_scale(scale-0.1)">&ndash;</A>&nbsp;<INPUT ID="zoom" NAME="zoom" TYPE="text" VALUE="2.0" SIZE="5" ONCHANGE="set_scale()">&nbsp;
+| &nbsp;<B TITLE="Limiter la vue à une distance maximale.">Metric</B>&nbsp;<A HREF="javascript:set_maxmetric(maxmetric+1)">+</A>&nbsp;<A HREF="javascript:if(0<maxmetric)set_maxmetric(maxmetric-1)">&ndash;</A>&nbsp;<INPUT ID="maxmetric" NAME="maxmetric" TYPE="text" VALUE="3" SIZE="4" ONCHANGE="set_maxmetric(this.value)">&nbsp;
+| &nbsp;<B TITLE="Permet l'optimisation automatique de la mise en page.">Optimisation</B><INPUT ID="auto_declump" NAME="auto_declump" TYPE="checkbox" ONCHANGE="set_autodeclump(this.checked)" CHECKED="CHECKED">&nbsp;
+| &nbsp;<B TITLE="Montrer les noms de routeurs.">Hostnames</B><INPUT ID="show_hostnames" NAME="show_hostnames" TYPE="checkbox" ONCHANGE="set_showdesc(this.checked)" CHECKED="CHECKED">&nbsp;
+| &nbsp;<A HREF="javascript:viz_save()" TITLE="Enregistrer les paramètres actuels dans un cookie.">Save</A>&nbsp;
+| &nbsp;<A HREF="javascript:viz_reset()" TITLE="Redémarrer le script Viz.">Reset</A></P>
+</FORM></DIV>
+<P><SPAN ID="debug" STYLE="visibility:hidden;"></SPAN>
+<IFRAME ID="RSIFrame" NAME="RSIFrame" STYLE="border:0px; width:0px; height:0px; visibility:hidden;">
+</IFRAME>
+<SCRIPT LANGUAGE="JavaScript1.2" TYPE="text/javascript">
+viz_setup("RSIFrame","main","nodes","edges");
+viz_update();
+</SCRIPT> </P>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

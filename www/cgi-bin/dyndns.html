@@ -1,0 +1,157 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="DynDNS"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>DynDNS</H1>
+<P>Cette page vous permet de configurer un service de DNS dynamique. Actuellement, les services DynDNS et freedns sont support&eacute;s.</P>
+EOF
+
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+	read QUERY_STRING
+fi
+
+if [ -z "$QUERY_STRING" ]; then
+	dyndns_service="$(nvram get ff_dyndns_service)"
+	dyndns_url="$(nvram get ff_dyndns_url)"
+	dyndns_pass="$(nvram get ff_dyndns_pass)"
+	dyndns_user="$(nvram get ff_dyndns_user)"	
+	
+	if [ -z "$dyndns_service" ]; then
+		div1="&nbsp;"
+		div2="&nbsp;"
+		div3="&nbsp;"
+		div4="&nbsp;"
+		div5="&nbsp;"
+		div6="&nbsp;"
+	else
+		div1="Nom d'hote: "
+		div2="<INPUT NAME=\"ff_dyndns_url\" SIZE=\"60\" TYPE=\"TEXT\" VALUE=\"$dyndns_url\">"
+		div3="Nom d'utilisateur: "
+		div4="<INPUT NAME=\"ff_dyndns_user\" SIZE=\"20\" TYPE=\"TEXT\" VALUE=\"$dyndns_user\">"
+		div5="Mot de passe:"
+		div6="<INPUT NAME=\"ff_dyndns_pass\" SIZE=\"20\" TYPE=\"password\" VALUE=\"$dyndns_pass\">"
+	fi
+                        
+	if [ "dyndns.org" = "$dyndns_service" ]; then
+	        SEL_DYNDNS="selected"
+	elif [ "freedns.afraid.org" = "$dyndns_service" ]; then
+	        SEL_FREEDNS="selected"
+	else
+        	SEL_DISABLED="selected"
+	fi
+cat<<EOF
+
+<script type="text/javascript">
+<!--
+function Go(x) {
+ if(x == "dyndns.org" || x == "freedns.afraid.org") {
+ 	document.getElementById("div1").innerHTML = "Nom d'hote: ";
+ 	document.getElementById("div2").innerHTML = "<INPUT NAME=\"ff_dyndns_url\" SIZE=\"60\" TYPE=\"TEXT\" VALUE=\"$dyndns_url\">";
+ 	document.getElementById("div3").innerHTML = "Nom d'utilisateur: ";
+ 	document.getElementById("div4").innerHTML = "<INPUT NAME=\"ff_dyndns_user\" SIZE=\"20\" TYPE=\"TEXT\" VALUE=\"$dyndns_user\">";
+ 	document.getElementById("div5").innerHTML = "Mot de passe: ";
+ 	document.getElementById("div6").innerHTML = "<INPUT NAME=\"ff_dyndns_pass\" SIZE=\"20\" TYPE=\"password\" VALUE=\"$dyndns_pass\">";
+ }
+ else {
+ 	document.getElementById("div1").innerHTML = "&nbsp;";
+ 	document.getElementById("div2").innerHTML = "&nbsp;";
+ 	document.getElementById("div3").innerHTML = "&nbsp;";
+ 	document.getElementById("div4").innerHTML = "&nbsp;";
+ 	document.getElementById("div5").innerHTML = "&nbsp;";
+ 	document.getElementById("div6").innerHTML = "&nbsp;";
+ }
+ return;
+}
+//-->
+</script>
+
+<FORM ACTION="dyndns.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" width="500px" CLASS="form">
+<TBODY>
+   <tr>
+   	  <td style="white-space:nowrap;">Service DDNS: </td>
+      <td align="left" style="float:left;" >
+      	<select size=1 name="ff_dyndns_service" onChange="Go(this.form.ff_dyndns_service.options[this.form.ff_dyndns_service.options.selectedIndex].value)">
+		<option value="" $SEL_DISABLED>d&eacute;activ&eacute;</option>
+			<option value="dyndns.org" $SEL_DYNDNS>dyndns.org</option>
+			<option value="freedns.afraid.org" $SEL_FREEDNS>freedns.afraid.org</option>
+		</select>
+	  </td>
+   </tr>
+   <tr>
+   	  <td colspan="2"><hr></td>
+   </tr>
+   <TR>
+      <TD><div id="div1">$div1</div></TD>
+      <TD><div id="div2">$div2</div></TD>
+   </TR>
+   <TR TITLE="Le nom d'utilisateur pour www.dyndns.com">
+      <TD><div id="div3">$div3</div></TD>
+      <TD><div id="div4">$div4</div></TD>
+   </TR>
+   <TR TITLE="Le mot de passe pour www.dyndns.com">
+      <TD><div id="div5">$div5</div></TD>
+      <TD><div id="div6">$div6</div></TD>
+   </TR>
+   <TR>
+      <TD COLSPAN="2">&nbsp;</TD>
+   </TR>
+   <TR>
+      <TD COLSPAN="2">
+         <INPUT NAME="post_dyndns" TITLE="Les changements sont activ&eacute;s. Les param&eacute;tre seront utilis&eacute; au prochain Red&eacute;marrage." TYPE="SUBMIT" VALUE="Appliquer">
+         &nbsp;&nbsp;&nbsp;
+         <INPUT NAME="post_abort" TITLE="Annuler les changements" TYPE="SUBMIT" VALUE="Annuler">
+      </TD>
+   </TR>
+</TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM></UL>
+
+EOF
+
+else
+   IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+   DIRTY=
+      if [ -n "$post_dyndns" ]; then
+         for V in ff_dyndns_url ff_dyndns_pass ff_dyndns_user ff_dyndns_service; 
+         do
+            eval "C=\$$V"
+            C=$(unescape $C)
+            if [ "$C" != "$(nvram get $V)" ]; then
+               DIRTY=1
+               nvram set $V="$C"
+            fi
+         done
+      fi
+
+      if [ -n "$DIRTY" ]; then
+         nvram commit>/dev/null 2>&1
+
+cat<<EOF
+
+<TABLE BORDER="0" CLASS="note">
+   <TBODY>
+      <TR>
+         <TD>Les changements sont activ&eacute;s. Les param&eacute;tres seront utilis&eacute;s au prochain <A HREF="reset.html">Red&eacute;marrage</A></TD>
+      </TR>
+   </TBODY>
+</TABLE>
+EOF
+
+      else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD> Aucun changement dans la configuration.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+      fi
+fi
+. ${SCRIPT%/*}/cgi-bin-post.sh

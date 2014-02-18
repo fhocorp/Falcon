@@ -1,0 +1,65 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Carte (Global)"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1 STYLE="display:none">Carte (Global)</H1>
+EOF
+
+IFS=\;\,\:
+set $(nvram get ff_adm_latlon)
+unset IFS
+sp="$1,%20$2"
+mapserver=$(nvram get ff_map_server)
+if [ -z "$1" ] || [ -z "$2" ];then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Pas de coordonnées GPS configuré.</TD>
+</TR>
+</TABLE>
+EOF
+
+elif [ -z "$mapserver" ]; then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>No map server settings.<SPAN LANG="pt">N&atilde;o existem defini&ccedil;&otilde;es do servidor de mapas.</TD>
+</TR>
+</TABLE>
+EOF
+
+elif ! grep -q /etc/init.d/S70freifunkmap /var/spool/cron/crontabs/root; then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Map server update not active.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<IFRAME SRC="$mapserver?sp=$sp&z=16" WIDTH="100%" HEIGHT="100%"
+FRAMEBORDER="0">
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>
+Your browser does not like
+ebendded frames (IFrames): You can view the embedded page with this
+link: <A HREF="$mapserver?sp=$sp&z=16">Show Map from Server</A>
+</TD>
+</TR>
+</TABLE></IFRAME>
+<P><SMALL>&copy; 2007 <A HREF="http://www.layereight.de">www.layereight.de</A></SMALL></P>
+EOF
+
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

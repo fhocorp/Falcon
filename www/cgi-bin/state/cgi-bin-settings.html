@@ -1,0 +1,131 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="R&eacute;glages"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>R&eacute;glages</H1>
+<P>Cette page vous permet de v&eacute;rifier que les r&eacute;glages sont corrects.</P>
+<NOSCRIPT>
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>L'activation
+de Javascript est n&eacute;cessaire pour recharger automatiquement la
+page de d&eacute;marrage pendant un <A HREF="reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE></NOSCRIPT>
+<TABLE BORDER="1" CELLPADDING="1" CELLSPACING="0" CLASS="fixwidth">
+<TR>
+<TH>Statut</TH>
+<TH>R&eacute;glage</TH>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get ff_pw)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/system/password.html">Mot de
+Passe</A>&nbsp;: Mot de Passe </TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get ff_adm_mail)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/system/address.html">Contact</A>&nbsp;:
+Email</TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get ff_adm_loc)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/system/address.html">Contact</A>&nbsp;:
+Localisation </TD>
+</TR>
+<TR>
+<TD>$( ( test "static" = "$(nvram get wifi_proto)" || test "olsr" = "$(nvram get wifi_proto)" ) &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans
+Fil</A>&nbsp;: Protocole Sans Fil = Statique</TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get wifi_ipaddr)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans
+Fil</A>&nbsp;: Adresse IP WLAN</TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get wifi_netmask)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans Fil</A>&nbsp;:
+Masque de sous-r&eacute;seau WLAN </TD>
+</TR>
+<TR>
+<TD>$(test "$(nvram get wl0_mode)" != "ap" && test "$(nvram get wl0_infra)" != "1" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans Fil</A>&nbsp;:
+Mode Sans Fil = Ad Hoc</TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get wl0_ssid)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans Fil</A>&nbsp;:
+ESSID </TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get ff_bssid)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans Fil</A>&nbsp;:
+BSSID </TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get wl0_channel)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans Fil</A>&nbsp;:
+Canal </TD>
+</TR>
+<TR>
+<TD>$(test "$(nvram get wl0_antdiv)" -ge 0 &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans
+Fil</A>&nbsp;: Antenne R&eacute;ceptrice&nbsp;!= Auto</TD>
+</TR>
+<TR>
+<TD>$(if [ -z "$(nvram get wl0_frag)" ] || [ "$(nvram get wl0_frag)" -ge 2346 ];then echo '<IMG ALT="OK" SRC="/images/yes.gif">'; else echo '<IMG ALT="Not OK" SRC="/images/no.gif">';fi)</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans
+Fil</A>&nbsp;: Seuil de Fragmentation == 2346 </TD>
+</TR>
+<TR>
+<TD>$(if [ -n "$(nvram get wl0_rts)" ] && [ "$(nvram get wl0_rts)" -lt 251 ];then echo '<IMG ALT="OK" SRC="/images/yes.gif">'; else echo '<IMG ALT="Not OK" SRC="/images/no.gif">';fi)</TD>
+<TD><A HREF="/cgi-bin/network/wifi.html">Sans
+Fil</A>&nbsp;: Seuil de RTS &lt;= 250 </TD>
+</TR>
+<TR>
+<TD>$(test -n "$(nvram get wan_hostname)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/system/system.html">Syst&egrave;me</A>&nbsp;:
+Nom d'h&ocirc;te</TD>
+</TR>
+<TR>
+<TD>$(test -z "$(nvram get ffw_noproxy)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.gif">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.gif">')</TD>
+<TD><A HREF="/cgi-bin/wifidog.html">Sans Fil</A>&nbsp;:
+PROXY (ATTENTION: doit &ecirc;tre en vert pour loguer les connections sur le hotspot)
+EOF
+
+cat<<EOF
+</TD>
+</TR>
+</TABLE>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

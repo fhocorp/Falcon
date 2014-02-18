@@ -1,0 +1,332 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Admin:
+Carte Data"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Admin:
+Carte Data</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+map_update="$(nvram get ff_map_update)"
+map_server="$(nvram get ff_map_server)"
+if [ -z "$map_server" ]; then
+map_server="http://layereight.de/freifunkmap.php"
+fi
+ff_adm_latlon=$(nvram get ff_adm_latlon)
+if [ -z "$ff_adm_latlon" ];then
+IFS=\;\,\:
+set - $(nvram get ff_adm_gps)
+unset IFS
+if [ -n "$1" ] && [ -n "$2" ];then
+ff_adm_latlon="$1,$2"
+fi
+fi
+# ...Werte holen
+ANT_INFO=$(nvram get ff_map_hfinfo)
+ff_adm_note=$(nvram get ff_adm_note)
+# Reste der MagicS/ff_adm_note - spart den Leuten das Neueingeben und säubern...
+# kann in einer der nächsten Versionen einfach weg:
+### cut 8<---
+if [ -z "$ANT_INFO" ];then
+MagicBEG='§§_HF-Info('
+MagicEND=')HF-Info_§§'
+ANT_INFO=$(echo "$ff_adm_note"|sed -n "s/.*${MagicBEG}\(.*\)${MagicEND}.*/\1/p")
+ff_adm_note=$(echo "$ff_adm_note"|sed "s/${MagicBEG}.*${MagicEND}//")
+fi
+### until here --->8
+[ -n "$ANT_INFO" ] && eval "$(echo "$ANT_INFO"|sed 's/:/\=/g')"
+
+cat<<EOF
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
+function set_val(id,val) {
+document.getElementById(id).value = val;
+}
+function select_(id) {
+document.getElementById(id).selected='selected';
+}
+function set_Ant(idx)
+{
+var a = document.getElementById("SelAnt").options[idx].value.split(new RegExp(":"));
+select_("Atyp_" + idx);
+set_val("type", a[0]);
+set_val("gain", a[1]);
+set_val("angP", a[2]);
+set_val("angO", a[3]);
+}
+function SelFreeAnt(id)
+{
+if( document.getElementById("SelAnt").selectedIndex != (A.length-1) )
+{
+select_("Atyp_" + (A.length-1) );
+if ( id != "type") set_val("type", A[A.length-1][1]);
+}
+}
+function set_Dir(idx) {
+select_("Hdir_" + idx);
+set_val("Hdir", document.getElementById("SelDir").options[idx].value);
+}
+function SelFreeDir() {
+select_("Hdir_" + (document.getElementById("SelDir").options.length-1) );
+}
+function set_Pol(idx) {
+select_("PolE_" + idx); set_val("PolE", document.getElementById("SelPol").options[idx].value);
+}
+function SelFreePol() {
+select_("PolE_" + (document.getElementById("SelPol").options.length-1) );
+}
+</SCRIPT>
+<FORM ACTION="freifunk-map.html" METHOD="POST"><FIELDSET
+STYLE="background-color: gainsboro;">
+<LEGEND STYLE="background-color: gainsboro;">Freifunk
+Map Server:</LEGEND>
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TR
+TITLE="The URL for the map server. Default: http://www.layereight.de/freifunkmap.php">
+<TD>URL:</TD>
+<TD COLSPAN="2"><INPUT NAME="ff_map_server" SIZE="48" STYLE="width: 100%;" VALUE="$map_server" TYPE="text"></TD>
+</TR>
+<TR
+TITLE="Update interval, time between data transmissions to the Freifunk map server. Default: hourly.">
+<TD>Update&nbsp;Intervall:</TD>
+<TD COLSPAN="2"><SELECT NAME="ff_map_update" SIZE="1" STYLE="width: 100%;">
+<!-- <OPTION VALUE="minute$sel_min">jede Minute</OPTION> -->
+<OPTION
+VALUE='hourly' $(test "$map_update" = "hourly" && echo "selected=selected")>Hourly</OPTION>
+<OPTION
+VALUE='daily' $(test "$map_update" = "daily" && echo "selected=selected")>Daily</OPTION>
+<OPTION
+VALUE='monthly' $(test "$map_update" = "monthly" && echo "selected=selected")>Monthly</OPTION>
+<OPTION
+VALUE='disabled' $(test "$map_update" = "disabled" && echo "selected=selected")>Disabled</OPTION>
+</SELECT></TD>
+</TR>
+<TR>
+<TD>GPS Position:</TD>
+<TD COLSPAN="2"><INPUT NAME="ff_adm_latlon" SIZE="48" STYLE="width: 100%;" VALUE="$ff_adm_latlon" TYPE="text" TITLE="GPS coordinates which will show up on the map with the next click. For example: '52.521234,13.408813'.">
+</TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FIELDSET>
+<FIELDSET STYLE="background-color: gainsboro;"><LEGEND
+STYLE="background-color: gainsboro;">Optional Configuration of your Antenna</LEGEND>
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth">
+<TR>
+<TD>Height:</TD>
+<TD COLSPAN="2"><INPUT NAME="A_Vpos" VALUE="$A_Vpos" TYPE="text" SIZE="4" TITLE="Antenna position above ground. Tip: Calculate 3 meters per floor.">
+meters</TD>
+</TR>
+<TR>
+<TD><HR SIZE="1"></TD>
+<TD>Adjustment</TD>
+<TD><HR SIZE="1"></TD>
+</TR>
+<TR>
+<TD>Tilt:</TD>
+<TD COLSPAN="2"><INPUT NAME="A_Vdir" VALUE="${A_Vdir}" TYPE="text" SIZE="4" TITLE="Tilt: -90&deg;(down) to +90&deg;(up)&deg;">
+</TD>
+</TR>
+<TR>
+<TD>Direction:</TD>
+<TD><INPUT NAME="A_Hdir" VALUE="$A_Hdir" ID="Hdir" ONKEYDOWN="SelFreeDir()" TYPE="text" SIZE="4" TITLE="Main transmission direction: clockwise from 1,0&deg; to 360,0&deg;(=North)">
+&deg;</TD>
+<TD><SELECT ONCHANGE="set_Dir(this.selectedIndex)" SIZE="1" NAME="N_SelDir" ID="SelDir">
+<OPTION ID="Hdir_0" VALUE="Omni">Omni-directional</OPTION>
+<OPTION ID="Hdir_1" VALUE="22,5">North-North-East</OPTION>
+<OPTION ID="Hdir_2" VALUE="45,0">North-East</OPTION>
+<OPTION ID="Hdir_3" VALUE="67,5">East-North-East</OPTION>
+<OPTION ID="Hdir_4" VALUE="90,0">East</OPTION>
+<OPTION ID="Hdir_5" VALUE="112,5">East-South-East</OPTION>
+<OPTION ID="Hdir_6" VALUE="135,0">South-East</OPTION>
+<OPTION ID="Hdir_7" VALUE="157,5">South-South-East</OPTION>
+<OPTION ID="Hdir_8" VALUE="180,0">South</OPTION>
+<OPTION ID="Hdir_9" VALUE="202,5">South-South-West</OPTION>
+<OPTION ID="Hdir_10" VALUE="225,0">South-West</OPTION>
+<OPTION ID="Hdir_11" VALUE="247,5">West-South-West</OPTION>
+<OPTION ID="Hdir_12" VALUE="270,0">West</OPTION>
+<OPTION ID="Hdir_13" VALUE="292,5">West-North-West</OPTION>
+<OPTION ID="Hdir_14" VALUE="315,0">North-West</OPTION>
+<OPTION ID="Hdir_15" VALUE="337,5">North-North-West</OPTION>
+<OPTION ID="Hdir_16" VALUE="360,0">North</OPTION>
+<OPTION ID="Hdir_17" VALUE="">Custom Value...</OPTION>
+</SELECT> </TD>
+</TR>
+<TR
+TITLE="With standard factory pin-antennas, the polarization corresponds to the pin direction...">
+<TD>Polarization:</TD>
+<TD><INPUT NAME="A_PolE" VALUE="$A_PolE" ID="PolE" ONKEYDOWN="SelFreePol()" TYPE="text" SIZE="4">
+&deg;</TD>
+<TD><SELECT ONCHANGE="set_Pol(this.selectedIndex)" SIZE="1" TITLE="Select the polarization of your antenna. Only helix antennas have a circular ('rotating') polarization. Enter (for once) the angle (clockwise/view in the transmission direction) between 1&deg; and 180&deg;(=vertical)." NAME="N_SelPol" ID="SelPol">
+<OPTION ID="PolE_0" DISABLED="disabled" VALUE="">-------linear</OPTION>
+<OPTION ID="PolE_1" VALUE="V">Vertical</OPTION>
+<OPTION ID="PolE_2" VALUE="H">Horizontal</OPTION>
+<OPTION ID="PolE_3" DISABLED="disabled" VALUE="">------Circular</OPTION>
+<OPTION ID="PolE_4" VALUE="R">Right</OPTION>
+<OPTION ID="PolE_5" VALUE="L">Left</OPTION>
+<OPTION ID="PolE_6" DISABLED="disabled" VALUE="">----------free</OPTION>
+<OPTION ID="PolE_7" VALUE="45">45°-Right</OPTION>
+<OPTION ID="PolE_8" VALUE="135">45°-Left</OPTION>
+<OPTION ID="PolE_9" VALUE="">Custom Value...</OPTION>
+</SELECT> </TD>
+</TR>
+<TR>
+<TD><HR SIZE="1"></TD>
+<TD>Antenna</TD>
+<TD><HR SIZE="1"></TD>
+</TR>
+<TR
+TITLE="Select the standard antenna type or enter the antenna parameters manually.">
+<TD>Type:</TD>
+<TD><INPUT NAME="A_type" VALUE="$A_type" ID="type" ONCHANGE="SelFreeAnt(this.id)" TYPE="text" SIZE="10" TITLE="A short id for the antenna type"></TD>
+<TD><SELECT ID="SelAnt" ONCHANGE="set_Ant(this.selectedIndex)" TITLE="Select a standard type which matches best." NAME="N_SelAnt">
+<OPTION ID="Atyp_0" VALUE="Dipol_02:2:80:360">Simple Antenna (Factory Dipol)</OPTION>
+<OPTION ID="Atyp_1" VALUE="OmniS_07:7-8:20:360">Omnidirectional Antenna (short ~50cm)</OPTION>
+<OPTION ID="Atyp_2" VALUE="OmniL_10:10-11:10:360">Omnidirectional Antenna (long ~100cm)</OPTION>
+<OPTION ID="Atyp_3" VALUE="Panel_06:6-7:90:90">Patch Antenna (~15x15cm)</OPTION>
+<OPTION ID="Atyp_4" VALUE="Panel_11:11-12:65:65">Patch Panel Antenna (~20x20cm)</OPTION>
+<OPTION ID="Atyp_5" VALUE="Panel_18:18-19:30:30">Patch Panel Antenna (~40x40cm)</OPTION>
+<OPTION ID="Atyp_6" VALUE="2Quad_09:9-10:65:65">2-, Bi-Quad</OPTION>
+<OPTION ID="Atyp_7" VALUE="4Quad_11:11-12:65:35">4-, Qu-Quad</OPTION>
+<OPTION ID="Atyp_8" VALUE="8Quad_13:13-14:65:35">8-, Oct-Quad</OPTION>
+<OPTION ID="Atyp_9" VALUE="WaveG_12:12-13:50:50">Waveguide</OPTION>
+<OPTION ID="Atyp_10" VALUE="BackF_13:13-14:42:42">Short Backfire</OPTION>
+<OPTION ID="Atyp_11" VALUE="YagiS_13:13-14:45:45">Yagi (short ~50cm)</OPTION>
+<OPTION ID="Atyp_12" VALUE="YagiL_15:15-16:35:35">Yagi (long ~80cm)</OPTION>
+<OPTION ID="Atyp_13" VALUE="Amos_14:14:15:120">Amos</OPTION>
+<OPTION ID="Atyp_14" VALUE="SlotS_10:10-11:45:80">Slotted Waveg. (short ~50cm)</OPTION>
+<OPTION ID="Atyp_15" VALUE="SlotL_13:13-14:25:80">Slotted Waveg. (long ~100cm)</OPTION>
+<OPTION ID="Atyp_16" VALUE="HelXs_09:9:70:70">Helical Antenna (short)</OPTION>
+<OPTION ID="Atyp_17" VALUE="HelXl_12:12:50:50">Helical Antenna (long)</OPTION>
+<OPTION ID="Atyp_18" VALUE="GridS_14:14-15:45:45">Parabolic Grid Antenna (small 30cm&Oslash;)</OPTION>
+<OPTION ID="Atyp_19" VALUE="GridL_20:20-21:23:23">Parabolic Grid Antenna (large 60cmx100cm)</OPTION>
+<OPTION ID="Atyp_20" VALUE="DishO_24:24:16:16">Parabolic Reflector Offset 90cm&Oslash;</OPTION>
+<OPTION ID="Atyp_21" VALUE="DishC_26:26:12:12">Parabolic Reflector Centered 90cm&Oslash;</OPTION>
+<OPTION ID="Atyp_22" VALUE="FreeForm:::">Custom
+Value...</OPTION></SELECT> </TD>
+</TR>
+<TR>
+<TD>Gain:</TD>
+<TD COLSPAN="2"><INPUT NAME="A_gain" VALUE="$A_gain" ID="gain" ONCHANGE="SelFreeAnt(this.id)" TYPE="text" SIZE="4" TITLE="Please enter a realistic(!) antenna gain in dBi (most common 2-4 dB less than printed on the box!)">
+dbi </TD>
+</TR>
+<TR>
+<TD>Beam Width:Largura do Feixe:</TD>
+<TD COLSPAN="2"><INPUT NAME="A_angP" VALUE="$A_angP" ID="angP" ONCHANGE="SelFreeAnt(this.id)" TYPE="text" SIZE="4" TITLE="Beam width (-3 dB) in the direction of the antenna's polarization">
+&deg; &nbsp; with
+polarization</TD>
+</TR>
+<TR>
+<TD>&nbsp;</TD>
+<TD COLSPAN="2"><INPUT NAME="A_angO" VALUE="$A_angO" ID="angO" ONCHANGE="SelFreeAnt(this.id)" TYPE="text" SIZE="4" TITLE="Beam width (-3 Db) perpendicular to antenna polarization">
+&deg; &nbsp; perpendicular
+to polarization</TD>
+</TR>
+<TR>
+<TD>Notes </TD>
+<TD COLSPAN="2"><TEXTAREA NAME="ff_adm_note" ROWS="4" COLS="40" STYLE="width: 100%;">$ff_adm_note</TEXTAREA></TD>
+</TR>
+<TR>
+<TD COLSPAN="3">&nbsp;</TD>
+</TR>
+<TR>
+<TD COLSPAN="3"><INPUT NAME="post_map" TITLE="Apply these settings. The settings are applied with the next restart." TYPE="SUBMIT" VALUE="Apply">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Cancel dialog page." TYPE="SUBMIT" VALUE="Cancel"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FIELDSET></FORM>
+<P><B>Note:</B> There are two
+different map techniques. They differ in the way they aquire data. Both
+techniques link the collected information with card material grabbed from
+a service provider on the Internet. Currently, both techniques exist in
+parallel and they do not exchange data.
+</P>
+<DL>
+<DT>Local
+Decentralized Map:</DT>
+<DD>This
+map technique floods geopositions and node names with the OLSR protocol.
+No additional server is required, because the single routers can inform
+each other. Only stations on your local radio network are displayed.
+This map uses the Microsoft Virtual Earth as well as the Google Earth
+program because those do not require registration.
+</DD>
+<DT LANG="de">Global
+server-based Freifunk Map:</DT>
+<DD>This
+map technique collects geopositions and all data you entered on this
+page on a centeral server on the Internet. For this reason, also
+stations on foreign radio networks can be displayed. Especially the
+antenna data may enable us to develop a server-based radio planning
+software. This map uses google maps with the google registration of the
+server owner.
+</DD>
+</DL>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_map" ]; then
+ff_map_hfinfo="A_type:${A_type};A_gain:${A_gain};A_angP:${A_angP};A_angO:${A_angO};A_Vpos:${A_Vpos};A_Hdir:${A_Hdir};A_Vdir:${A_Vdir};A_PolE:${A_PolE};"
+for V in ff_map_server ff_map_hfinfo ff_map_update ff_adm_note ff_adm_latlon;
+do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram unset ff_adm_gps
+nvram commit>/dev/null 2>&1
+/etc/init.d/S70freifunkmap start
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Changes
+committed.
+EOF
+
+if [ "disabled" != "$ff_map_update" ];then
+
+cat<<EOF
+</TD>
+</TR>
+<TR>
+<TD>
+<PRE>
+Refreshing data on the map server (takes a moment)...
+$(/etc/init.d/S70freifunkmap update ERROR)
+...ok.
+</PRE>
+EOF
+
+fi
+
+cat<<EOF
+</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>No
+settings are changed.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

@@ -1,0 +1,51 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE=""
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1 STYLE="display:none"></H1>
+EOF
+
+srcip_for_ip() {
+ip route get $1 | sed -n "s#.* src[ ]\{1,\}\([0-9\.]\{1,\}\).*#\1#p"
+}
+srcdev_for_ip() {
+ip route get $1 | sed -n "s#.* dev[ ]\{1,\}\([a-z0-9]\{1,\}\).*#\1#p"
+}
+SRCIP=$(srcip_for_ip $REMOTE_ADDR)
+SRCDEV=$(srcdev_for_ip $REMOTE_ADDR)
+REDIR_ACTION="location.href='cgi-bin/index.html';"
+eval $(netparam)
+if [ "$SRCDEV" != "lo" ] && [ "$LANADR" != "$SRCIP" ]; then
+if kill -0 $(cat /var/run/secureadmin.pid 2>/dev/null) 2>/dev/null; then
+REDIR_ACTION="location.href='https://$SRCIP/cgi-bin/index.html';"
+elif [ "1" != "$(nvram get ff_unsecure_webadmin)" ];then
+REDIR_ACTION=
+fi
+fi
+
+cat<<EOF
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
+//<!--
+$REDIR_ACTION
+//-->
+</SCRIPT>
+<P></P>
+<UL>
+<LI></LI>
+<LI>
+<DL>
+<DT>Linux:</DT>
+<DD></DD>
+<DT>Windows:</DT>
+<DD>
+</DD>
+</DL></LI>
+<LI></LI>
+<LI></LI>
+</UL>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

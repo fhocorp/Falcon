@@ -1,0 +1,104 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Configuration R&eacute;seau"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Configuration R&eacute;seau</H1>
+<P>Voici un r&eacute;sum&eacute; de votre configuration r&eacute;seau.</P>
+<TABLE id="resume">
+<TR><TH COLSPAN="2"><A HREF="wifi.html"><H2>Interface Sans fil</H2></A></TH></TR>
+EOF
+if [ $(uci get network.lan.proto) != "disabled" ]; then
+
+cat<<EOF
+<TR><TD><B>Adresse IP</B></TD><TD>$(uci get network.lan.ipaddr)</TD></TR>
+<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(uci get network.lan.netmask)</TD></TR>
+<TR><TD><B>Canal radio</B></TD><TD>$(uci get wireless.wl0.channel)</TD></TR>
+<TR><TD><B>ESSID</B></TD><TD>$(uci get wireless.@wifi-iface[0].ssid)</TD></TR>
+</UL>
+EOF
+
+else 
+
+cat<<EOF
+<TR><TD>d&eacute;sactiv&eacute;</TD></TR>
+EOF
+
+fi
+
+cat<<EOF
+<TR><TH COLSPAN="2"><A HREF="fon.html"><H2>Point d'acces FON</H2></A></TH></TR>
+EOF
+if [ $(uci get network.lan.proto) != "disabled" ]; then
+
+cat<<EOF
+<TR><TD><B>Canal radio</B></TD><TD>$(uci get wireless.wl0.channel)</TD></TR>
+<TR><TD><B>ESSID</B></TD><TD>$(uci get wireless.@wifi-iface[1].ssid)</TD></TR>
+</UL>
+EOF
+
+else 
+
+cat<<EOF
+<TR><TD>d&eacute;sactiv&eacute;</TD></TR>
+EOF
+
+fi
+
+cat<<EOF
+<TR><TH COLSPAN="2"><A HREF="lan.html"><H2>R&eacute;seau local</H2></A></TH></TR>
+EOF
+if [ $(uci get network.lan.proto) != "disabled" ]; then
+
+cat<<EOF
+<TR><TD><B>Adresse IP</B></TD><TD>$(uci get network.lan.ipaddr)</TD></TR>
+<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(uci get network.lan.netmask)</TD></TR>
+EOF
+
+else 
+
+cat<<EOF
+<TR><TD>d&eacute;sactiv&eacute;</TD></TR>
+EOF
+
+fi
+cat<<EOF
+<TR><TH COLSPAN="2"><A HREF="wan.html"><H2>Connexion ethernet</H2></A></TH></TR>
+EOF
+if [ $(uci get network.wan.proto) != "disabled" ]; then
+
+cat<<EOF
+<TR><TD><B>Adresse IP</B></TD><TD>$(uci get network.wan.ipaddr)</TD></TR>
+<TR><TD><B>Masque de sous-r&eacute;seau</B></TD><TD>$(uci get network.wan.netmask)</TD></TR>
+EOF
+
+fi
+cat<<EOF
+<TR><TH COLSPAN="2"><A HREF="wanmobile.html"><H2>Connexion 3G+/H+</H2></A></TH></TR>
+EOF
+if [ $(uci get network.mobile.proto) != "disabled" ]; then
+
+cat<<EOF
+<TR><TD><B>Adresse IP</B></TD><TD>$(/sbin/ifconfig 3g-mobile | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')</TD></TR>
+EOF
+
+else 
+
+cat<<EOF
+<TR><TD>d&eacute;sactiv&eacute;</TD></TR>
+EOF
+
+fi
+
+cat<<EOF
+<P>
+</P>
+EOF
+
+cat<<EOF
+</TABLE>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

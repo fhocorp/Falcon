@@ -1,0 +1,223 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Administration&nbsp;: Transfert de ports"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Administration&nbsp;: Transfert de ports</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+ff_portfw="$(nvram get ff_portfw)"
+else
+while [ "${#QUERY_STRING}" != "0" ]; do
+name="${QUERY_STRING%%=*}"
+QUERY_STRING="${QUERY_STRING#*=}"
+value="${QUERY_STRING%%&*}"
+if echo "$QUERY_STRING" | grep -q "&" -; then
+QUERY_STRING="${QUERY_STRING#*&}"
+else
+QUERY_STRING=""
+fi
+case $name in
+delIP)
+if echo "${QUERY_STRING#*=}" | grep -q IP -; then
+while true ; do
+QUERY_STRING="${QUERY_STRING#*&}"
+if [ "${QUERY_STRING%%=*}" = "IP" ]; then break; fi
+done
+else
+QUERY_STRING=""
+fi
+;;
+delPort)
+if echo "${QUERY_STRING#*&}" | grep -q Port -; then
+while true ; do
+QUERY_STRING="${QUERY_STRING#*&}"
+if [ "${QUERY_STRING%%=*}" = "Port" ]; then break; fi
+if [ "${QUERY_STRING%%=*}" = "IP" ]; then break; fi
+done
+else
+QUERY_STRING=""
+fi
+;;
+IP)
+if [ "${#value}" != "0" ] ; then ff_portfw=$ff_portfw" $value:" ; fi
+;;
+Port)
+QUERY_STRING="${QUERY_STRING#*=}"
+Range="${QUERY_STRING%%&*}"
+QUERY_STRING="${QUERY_STRING#*&}"
+name3="${QUERY_STRING%%=*}"
+if [ "$name3" = "tcp" ] || [ "$name3" = "udp" ]; then
+if [ "${#value}" = "0" ] && [ "${#Range}" = "0" ]; then
+QUERY_STRING="delPort=Entferne&Port=&Range=&$QUERY_STRING"
+elif [ "${#value}" != "0" ] && [ "${#Range}" != "0" ] ; then
+ff_portfw=$ff_portfw"$value-$Range/"
+elif [ "${#value}" != "0" ] && [ "${#Range}" = "0" ] ; then
+ff_portfw=$ff_portfw"${value}/"
+elif [ "${#value}" = "0" ] && [ "${#Range}" != "0" ] ; then
+ff_portfw=$ff_portfw"${Range}/"
+fi
+fi
+;;
+tcp)
+if [ "${QUERY_STRING%%=*}" = "udp" ] ; then
+ff_portfw="$ff_portfw""tu,"
+if echo "$QUERY_STRING" | grep -q "&" -; then
+QUERY_STRING="${QUERY_STRING#*&}"
+else
+QUERY_STRING=""
+fi
+else
+ff_portfw="$ff_portfw""t,"
+fi
+;;
+udp)
+ff_portfw="$ff_portfw""u,"
+;;
+post_portfw)
+post_portfw="1"
+;;
+post_abort)
+post_abort="1"
+;;
+esac
+done
+fi
+if [ -z "$post_abort" ] && [ -z "$post_portfw" ]; then
+
+cat<<EOF
+<FORM ACTION="portfw.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR>
+<TD COLSPAN="5">
+EOF
+
+for FWTARGET in $ff_portfw; do
+DESTIP=${FWTARGET%%:*}
+DPORTS=${FWTARGET#*:}
+
+cat<<EOF
+</TD>
+</TR>
+<TR
+TITLE="Adresse IP vers laquelle les requêtes destinées aux ports suivants doivent être transférées.">
+<TD><INPUT NAME="delIP" TITLE="Supprimer l'adresse cible" TYPE="submit" VALUE="Supprimer"></TD>
+<TD>Adresse IP cible&nbsp;:</TD>
+<TD COLSPAN="3"><INPUT TYPE="text" NAME="IP" SIZE="15" MAXLENGTH="15" VALUE="$DESTIP">
+EOF
+
+while [ ${#DPORTS} != "0" ]; do
+PORTPROTO=${DPORTS%%,*}
+DPORT=${PORTPROTO%/*}
+if echo $DPORT | grep -q - -; then
+PORTRANGE=${DPORT#*-}
+DPORT=${DPORT%-*}
+else
+PORTRANGE=""
+fi
+PROTO=${PORTPROTO#*/}
+tcp="" udp=""
+case $PROTO in
+t)
+tcp=' CHECKED="CHECKED"'
+;;
+u)
+udp=' CHECKED="CHECKED"'
+;;
+tu)
+tcp=' CHECKED="CHECKED"'
+udp=' CHECKED="CHECKED"'
+;;
+esac
+DPORTS=${DPORTS#*,}
+
+cat<<EOF
+</TD>
+</TR>
+<TR
+TITLE="Configure redirected ports.">
+<TD><INPUT NAME="delPort" TITLE="Supprimer une plage" TYPE="submit" VALUE="Supprimer"></TD>
+<TD>Port&nbsp;:</TD>
+<TD><INPUT TYPE="text" NAME="Port" SIZE="5" MAXLENGTH="5" VALUE="$DPORT"></TD>
+<TD>-&nbsp;<INPUT TYPE="text" NAME="Range" SIZE="5" MAXLENGTH="5" VALUE="$PORTRANGE"></TD>
+<TD><INPUT TYPE="checkbox" NAME="tcp" $tcp>&nbsp;tcp&nbsp;
+<INPUT TYPE="checkbox" NAME="udp" $udp>&nbsp;udp
+EOF
+
+done
+
+cat<<EOF
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="new" TITLE="Créer une plage" TYPE="submit" VALUE="Créer une plage de ports"></TD>
+<TD><INPUT TYPE="text" NAME="Port" SIZE="5" MAXLENGTH="5" VALUE=""></TD>
+<TD>-&nbsp;<INPUT TYPE="text" NAME="Range" SIZE="5" MAXLENGTH="5" VALUE=""></TD>
+<TD><INPUT TYPE="checkbox" NAME="tcp">&nbsp;tcp&nbsp;
+<INPUT TYPE="checkbox" NAME="udp">&nbsp;udp
+EOF
+
+done
+
+cat<<EOF
+</TD>
+</TR>
+<TR>
+<TD>Adresse IP cible&nbsp;:</TD>
+<TD><INPUT TYPE="text" NAME="IP" SIZE="15" MAXLENGTH="15" VALUE=""></TD>
+<TD COLSPAN="3"><INPUT NAME="new" TITLE="Créer une nouvelle adresse IP cible" TYPE="submit" VALUE="Créer"></TD>
+</TR>
+<TR>
+<TD>&nbsp;</TD>
+<TD COLSPAN="4"></TD>
+</TR>
+<TR>
+<TD COLSPAN="5"><INPUT NAME="post_portfw" TITLE="Appliquer ces paramètres. Ils seront utilisés au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler les changements." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+else
+DIRTY=
+if [ -n "$post_portfw" ]; then
+ff_portfw="$(echo $ff_portfw|sed -e 's/^ //;s/ /+/g')"
+for V in ff_portfw; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Les changements sont activ&eacute;s. Les param&egrave;tres seront utilis&eacute;s au prochain <A HREF="../reset.html">red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Aucun changement dans la configuration.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

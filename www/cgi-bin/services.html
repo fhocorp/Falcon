@@ -1,0 +1,26 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Services"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Services</H1>
+<P>Cette partie vous permet d'acc&eacute;der aux pages de configurations des diff&eacute;rent services install&eacute;s sur votre routeur.<BR>
+La page <B>OLSR</B> permet de configurer le routage OLSR dans le cas d'un r&eacute;seau maill&eacute;. La page <B>Passerelle</B> vous permet de limiter la bande passante utilis&eacute;e par les clients wifi.</P>
+<P>Cette partie accueil &eacute;galement les pages de configuration que vous pouvez &eacute;ventuellement ajouter par l'installation de paquets ipk.</P>
+<NOSCRIPT>
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>L'activation
+de Javascript est n&eacute;cessaire pour recharger automatiquement la
+page de d&eacute;marrage pendant un <A HREF="reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE></NOSCRIPT>
+<P><B>Astuce</B>&nbsp;:
+Appuyer sur <KBD STYLE="text-decoration: blink;">[F1]</KBD> ou d&eacute;placer
+doucement la souris sur les zones de contr&ocirc;le pour afficher un petit
+message d'aide.</P>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

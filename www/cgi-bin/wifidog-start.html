@@ -1,0 +1,73 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="D&eacute;marrage de Wifidog"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>D&eacute;marrage de Wifidog</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = POST ]; then
+read QUERY_STRING
+fi
+if [ -n "$QUERY_STRING" ]; then
+eval $(echo "$QUERY_STRING"|awk -F'&' '{for(i=1;i<=NF;i++){print $i}}')
+fi
+if ps|grep -q '/usr/bin/[w]ifidog' && test "$restart" != 1
+then
+
+cat<<EOF
+<P>
+Wifidog est d&eacute;marr&eacute;<a href="wifidog-stop.html">Arr&eacute;ter wifidog ?</a>
+</P>
+EOF
+
+else
+if [ "$start" != start ]; then
+
+cat<<EOF
+<FORM ACTION="wifidog-start.html" method="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0">
+<TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0">
+<TR><TD><TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR TITLE="Cochez cette case si vous souhaitez que wifidog d&eacute;marre automatiquement lors du d&eacute;marrage ou du redémarrage du point d'acc&eacute;s.">
+<TD>D&eacute;marrage permanent : </TD>
+<TD><INPUT TYPE="checkbox" NAME="permanent"></INPUT>
+<INPUT TYPE="hidden" NAME="start" VALUE="start"></INPUT>
+<INPUT TYPE="hidden" NAME="restart" VALUE="$restart"></INPUT>
+</TD></TR>
+<TR><TD COLSPAN="2">
+<INPUT TYPE="submit" VALUE="D&eacute;marrer">
+</TD></TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR>
+</TABLE></TD></TR>
+</TABLE>
+</FORM>
+EOF
+
+else
+echo '<PRE><CODE>'
+init_script_wifidog="/etc/init.d/S65wifidog"
+init_script_proxy="/etc/init.d/S99tinyproxy"
+if test -n "$permanent" ;then
+nvram set wifidog=1
+nvram commit
+fi
+if test "$restart" = 1; then
+echo killall wifidog
+if [ -n "$( pidof tinyproxy )" ]
+then
+killall tinyproxy
+fi
+killall wifidog
+sleep 4
+fi
+eval "$init_script_proxy start"
+echo "$init_script_wifidog start"
+eval "$init_script_wifidog start"
+echo '</CODE></PRE>'
+echo '<a href="wifidog.html">[retour vers l'\''interface de configuration de wifidog]</a>'
+fi;fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

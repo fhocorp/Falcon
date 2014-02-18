@@ -1,0 +1,391 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Administration : Passerelle Internet"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>
+Administration : Passerelle Internet
+</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+# Speedups
+ff_gw_ext_if="$(nvram get ff_gw_ext_if)"
+ff_gw_redirect_url="$(nvram get ff_gw_redirect_url)"
+ff_gw_redirect_mac="$(nvram get ff_gw_redirect_mac)"
+ff_gw_redirect_ip="$(nvram get ff_gw_redirect_ip)"
+ff_gw_redirect_update="$(nvram get ff_gw_redirect_update)"
+ff_gw_pmacct_enabled="$(nvram get ff_gw_pmacct_enabled)"
+ff_gw_trafsh_enabled="$(nvram get ff_gw_trafsh_enabled)"
+ff_gw_trafsh_bw_total="$(nvram get ff_gw_trafsh_bw_total)"
+ff_gw_trafsh_bw_other="$(nvram get ff_gw_trafsh_bw_other)"
+ff_gw_filter_block_p2p="$(nvram get ff_gw_filter_block_p2p)"
+
+cat<<EOF
+<FORM ACTION="gateway.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR TITLE="Entrez l'interface externe. Laissez vide pour d&eacute;sactiver le plugin passerelle.">
+<TD>Interface externe:</TD>
+<TD><INPUT NAME="ff_gw_ext_if" SIZE="5" TYPE="TEXT" VALUE="$ff_gw_ext_if"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR TITLE="Entrez l'URL de la liste blanche IP. Laissez vide pour d&eacute;sactiver la liste blanche IP.">
+<TD>URL de la liste blanche:</TD>
+<TD><INPUT NAME="ff_gw_redirect_url" SIZE="60" TYPE="TEXT" VALUE="$ff_gw_redirect_url"></TD>
+</TR>
+<TR
+TITLE="Entrez les adresses MAC qui ne doivent pas &ecirc;tre rout&eacute;es vers l'internet. Utilisez un espace pour s&eacte;parer plusieurs adresses MAC. Laissez vide pour d&eacute;sactiver la liste noire MAC.">
+<TD>Liste noire MAC:</TD>
+<TD><INPUT NAME="ff_gw_redirect_mac" SIZE="60" TYPE="TEXT" VALUE="$ff_gw_redirect_mac"></TD>
+</TR>
+<TR
+TITLE="Entrez les adresses IP qui ne doivent pas &ecirc;tre rout&eacute;es vers l'internet. Utilisez un espace pour s&eacte;parer plusieurs adresses IP. Laissez vide pour d&eacute;sactiver la liste noire IP.">
+<TD>Liste noire IP:</TD>
+<TD><INPUT NAME="ff_gw_redirect_ip" SIZE="60" TYPE="TEXT" VALUE="$ff_gw_redirect_ip"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR TITLE="Bloquer le trafic P2P (Bittorrent, Edonkey, Kazaa)">
+<TD>Bloquer le trafic P2P:</TD>
+<TD>
+<SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_gw_filter_block_p2p" TYPE="RADIO" VALUE="1"$(if [ "$ff_gw_filter_block_p2p" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN>
+<INPUT CLASS="radio" NAME="ff_gw_filter_block_p2p" TYPE="RADIO" VALUE="0"$(if [ "$ff_gw_filter_block_p2p" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR TITLE="Active/d&eacute;sactive le comptage.">
+<TD>Comptage:</TD>
+<TD>
+<SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_gw_pmacct_enabled" ONCLICK="this.form.ff_gw_pmacct_in_filter.disabled=false;this.form.ff_gw_pmacct_out_filter.disabled=false;" TYPE="RADIO" VALUE="1"$(if [ "$ff_gw_pmacct_enabled" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN>
+<INPUT CLASS="radio" NAME="ff_gw_pmacct_enabled" ONCLICK="this.form.ff_gw_pmacct_in_filter.disabled=true;this.form.ff_gw_pmacct_out_filter.disabled=true;" TYPE="RADIO" VALUE="0"$(if [ "$ff_gw_pmacct_enabled" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;
+</TD>
+</TR>
+<TR TITLE="Filtre du comptage pour le trafic entrant.">
+<TD>Filtre (entrant):</TD>
+<TD><INPUT NAME="ff_gw_pmacct_in_filter" SIZE="60" TYPE="TEXT" VALUE="$(nvram get ff_gw_pmacct_in_filter)"$(if [ "$ff_gw_pmacct_enabled" != "1" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR TITLE="Filtre du comptage pour le trafic sortant.">
+<TD>Filtre (sortant):</TD>
+<TD><INPUT NAME="ff_gw_pmacct_out_filter" SIZE="60" TYPE="TEXT" VALUE="$(nvram get ff_gw_pmacct_out_filter)"$(if [ "$ff_gw_pmacct_enabled" != "1" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR TITLE="Active/d&eacute;sactive le traffic shaping.">
+<TD>Traffic Shaping:</TD>
+<TD>
+<SPAN STYLE="white-space: nowrap;"><INPUT CLASS="radio" NAME="ff_gw_trafsh_enabled" ONCLICK="this.form.ff_gw_trafsh_bw_total.disabled=false;this.form.ff_gw_trafsh_bw_other.disabled=false;" TYPE="RADIO" VALUE="1"$(if [ "$ff_gw_trafsh_enabled" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;</SPAN>
+<INPUT CLASS="radio" NAME="ff_gw_trafsh_enabled" ONCLICK="this.form.ff_gw_trafsh_bw_total.disabled=true;this.form.ff_gw_trafsh_bw_other.disabled=true;" TYPE="RADIO" VALUE="0"$(if [ "$ff_gw_trafsh_enabled" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;
+</TD>
+</TR>
+<TR TITLE="Choisissez la bande passante totale de votre connexion internet">
+<TD>Bande passante:</TD>
+<TD><SELECT NAME="ff_gw_trafsh_bw_total"$(if [ "$ff_gw_trafsh_enabled" != "1" ];then echo ' disabled="disabled"';fi)><OPTION VALUE="128">128 kbit/s</OPTION>
+<OPTION
+VALUE='256' $(test "$ff_gw_trafsh_bw_total" = "256" && echo "selected=selected")>256
+kbit/s</OPTION>
+<OPTION
+VALUE='768' $(test "$ff_gw_trafsh_bw_total" = "768" && echo "selected=selected")>768
+kbit/s</OPTION>
+<OPTION
+VALUE='1024' $(test "$ff_gw_trafsh_bw_total" = "1024" && echo "selected=selected")>1
+Mbit/s</OPTION>
+<OPTION
+VALUE='1536' $(test "$ff_gw_trafsh_bw_total" = "1536" && echo "selected=selected")>1,5
+MBit/s</OPTION>
+<OPTION
+VALUE='2048' $(test "$ff_gw_trafsh_bw_total" = "2048" && echo "selected=selected")>2
+Mbit/s</OPTION>
+<OPTION
+VALUE='3072' $(test "$ff_gw_trafsh_bw_total" = "3072" && echo "selected=selected")>3
+Mbit/s</OPTION>
+<OPTION
+VALUE='5120' $(test "$ff_gw_trafsh_bw_total" = "5120" && echo "selected=selected")>5
+Mbit/s</OPTION>
+<OPTION
+VALUE='6144' $(test "$ff_gw_trafsh_bw_total" = "6144" && echo "selected=selected")>6
+Mbit/s</OPTION>
+<OPTION
+VALUE='8096' $(test "$ff_gw_trafsh_bw_total" = "8096" && echo "selected=selected")>8
+Mbit/s</OPTION>
+<OPTION
+VALUE='16384' $(test "$ff_gw_trafsh_bw_total" = "16384" && echo "selected=selected")>16
+Mbit/s</OPTION></SELECT></TD>
+</TR>
+<TR TITLE="Quel pourcentage de la bande passante doit être partag&eacute; avec d'autres ?">
+<TD>Partage:</TD>
+<TD><INPUT NAME="ff_gw_trafsh_bw_other" SIZE="5" TYPE="TEXT" VALUE="$ff_gw_trafsh_bw_other"$(if [ "$ff_gw_trafsh_enabled" != "1" ];then echo ' disabled="disabled"';fi)>&nbsp;pourcent</TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_gateway" TITLE="Appliquer les paramètres. Ils seront effectifs au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler cette page." TYPE="SUBMIT" VALUE="Annuler">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_ip_refresh" TITLE="Mettre &agrave; jour et activer la liste blanche IP" TYPE="SUBMIT" VALUE="Mettre à jour les IPs">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_pmacct_backup" TITLE="Sauvegarder le comptage maintenant" TYPE="SUBMIT" VALUE="Sauvegarde du comptage"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<H3>Etat:</H3>
+<UL>
+EOF
+
+if [ "$ff_gw_ext_if" ]
+then
+if [ "$ff_gw_redirect_url" ] || [ "$ff_gw_redirect_mac" ] || [ "$ff_gw_redirect_ip" ]
+then
+if [ "$ff_gw_redirect_update" ]
+then
+if [ "$ff_gw_redirect_mac" ]
+then
+if [ "$ff_gw_redirect_ip" ]
+then
+
+cat<<EOF
+<LI>URL de la liste blanche, listes noires MAC et IP activ&eacute;s
+EOF
+
+else
+
+cat<<EOF
+<LI>URL de la liste blanche et liste noire MAC activ&eacute;s
+EOF
+
+fi
+else
+if [ "$ff_gw_redirect_ip" ]
+then
+
+cat<<EOF
+<LI>URL de la liste blanche et liste noire IP activ&eacute;s
+EOF
+
+else
+
+cat<<EOF
+<LI>URL de la liste blanche activ&eacute;e
+EOF
+
+fi
+fi
+else
+if [ "$ff_gw_redirect_mac" ]
+then
+if [ "$ff_gw_redirect_ip" ]
+then
+
+cat<<EOF
+<LI>Listes noires MAC et IP activ&eacute;es
+EOF
+
+else
+
+cat<<EOF
+<LI>Liste noire MAC activ&eacute;e
+EOF
+
+fi
+else
+if [ "$ff_gw_redirect_ip" ]
+then
+
+cat<<EOF
+<LI>Liste noire MAC activ&eacute;e
+EOF
+
+else
+
+cat<<EOF
+<LI>URL de la liste blanche activ&eacute;e
+EOF
+
+fi
+fi
+fi
+if [ "$ff_gw_redirect_update" ]
+then
+if [ "`iptables -n -t nat -L redirect_check 2> /dev/null | grep target`" ]
+then
+
+cat<<EOF
+et actif. Derni&egrave;re mise à jour des IPs:
+EOF
+
+echo $ff_gw_redirect_update
+
+cat<<EOF
+</LI>
+EOF
+
+else
+if [ -e "/tmp/redirect_error.txt" ]
+then
+
+cat<<EOF
+mais <B>inactif</B> parce qu'un probl&egrave;me est survenu.<BR>Message d'erreur:
+EOF
+
+cat /tmp/redirect_error.txt
+
+cat<<EOF
+</LI>
+EOF
+
+else
+
+cat<<EOF
+mais <B>inactif. Aucune mise à jour des IP pour l'instant.</LI>
+EOF
+
+fi
+fi
+else
+
+cat<<EOF
+mais <B>inactif. Aucune mise à jour des IP pour l'instant.</LI>
+EOF
+
+fi
+else
+
+cat<<EOF
+<LI>Redirection d&eacute;sactiv&eacute;e.</LI>
+EOF
+
+fi
+if [ "$ff_gw_pmacct_enabled" = "1" ]
+then
+if [ "`/etc/init.d/S70pmacct show | grep 'Connection refused'`" ]
+then
+
+cat<<EOF
+<LI>Comptage activ&eacute;, mais pas encore en service (red&eacute;marrage n&eacute;cessaire).</LI>
+EOF
+
+else
+
+cat<<EOF
+<LI>Comptage activ&eacute;.</LI>
+EOF
+
+fi
+else
+
+cat<<EOF
+<LI>Comptage d&eacute;sactiv&eacute;.</LI>
+EOF
+
+fi
+if [ "$ff_gw_trafsh_enabled" = "1" ] && [ "$ff_gw_trafsh_bw_other" ]
+then
+if [ "`/etc/init.d/S70traffic_shaping show`" ]
+then
+
+cat<<EOF
+<LI>Traffic Shaping activ&eacute;.</LI>
+EOF
+
+else
+
+cat<<EOF
+<LI>Traffic Shaping activ&eacute;, mais pas encore en service (red&eacute;marrage n&eacute;cessaire).</LI>
+EOF
+
+fi
+else
+
+cat<<EOF
+<LI>Traffic Shaping d&eacute;sactiv&eacute;.</LI>
+EOF
+
+fi
+else
+
+cat<<EOF
+<LI><B>Interface externe non sp&eacute;cifi&eacute;e - plugin passerelle d&eacute;sactiv&eacute;.</B></LI>
+EOF
+
+fi
+
+cat<<EOF
+</UL>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_gateway" ]; then
+for V in ff_gw_ext_if ff_gw_redirect_url ff_gw_redirect_mac ff_gw_redirect_ip ff_gw_pmacct_enabled ff_gw_pmacct_in_filter ff_gw_pmacct_out_filter ff_gw_trafsh_enabled ff_gw_trafsh_bw_total ff_gw_trafsh_bw_other ff_gw_filter_block_p2p; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+if ( !( [ "$ff_gw_pmacct_enabled" = "0" ] && ( [ "$V" = "ff_gw_pmacct_in_filter" ] || [ "$V" = "ff_gw_pmacct_out_filter" ] ) ) && !( [ "$ff_gw_trafsh_enabled" = "0" ] && ( [ "$V" = "ff_gw_trafsh_bw_total" ] || [ "$V" = "ff_gw_trafsh_bw_other" ] ) ) )
+then
+DIRTY=1
+nvram set $V="$C"
+fi
+fi
+done
+fi
+if [ -n "$post_ip_refresh" ]; then
+
+cat<<EOF
+<PRE>
+EOF
+
+/etc/init.d/S70redirect force-start
+
+cat<<EOF
+</PRE>
+EOF
+
+elif [ -n "$post_pmacct_backup" ]
+then
+
+cat<<EOF
+<PRE>
+EOF
+
+/etc/init.d/S70pmacct do-backup
+
+cat<<EOF
+</PRE>
+EOF
+
+else
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Les changements sont enregistr&eacute;s. Les param&egrave;tres seront utilis&eacute;s au prochain <A HREF="reset.html">red&eacute;marrage</A>.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TBODY>
+<TR>
+<TD>Aucun changement n'a &eacute;t&eacute; effectu&eacute;.</A>.</TD>
+</TR></TBODY>
+</TABLE>
+EOF
+
+fi
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

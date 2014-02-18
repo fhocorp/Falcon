@@ -1,0 +1,52 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Contact"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Contact</H1>
+<P>L'administrateur de ce point d'acc&egrave;s
+a entr&eacute; ces informations pour &ecirc;tre contact&eacute;&nbsp;:</P>
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="1" CELLPADDING="1" CELLSPACING="0" CLASS="form"
+RULES="rows" WIDTH="448">
+<TR>
+<TD>Surnom&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ff_adm_nick)</TD>
+</TR>
+<TR>
+<TD>Nom&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ff_adm_name)</TD>
+</TR>
+<TR>
+<TD>Adresse Email&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ff_adm_mail)</TD>
+</TR>
+<TR>
+<TD>T&eacute;l&eacute;phone&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ff_adm_tel)</TD>
+</TR>
+<TR>
+<TD>Localisation&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ff_adm_loc)</TD>
+</TR>
+<TR>
+<TD>Nom du Noeud Wifidog</TD>
+<TD>$(nvram get ff_adm_node)</TD>
+</TR>
+<TR>
+<TD>Latitude&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ffw_adm_lat)</TD>
+</TR>
+<TR>
+<TD>Longitude&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ffw_adm_lon)</TD>
+</TR>
+<TR>
+<TD>Notes&nbsp;:&nbsp;</TD>
+<TD>$(nvram get ff_adm_note)</TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

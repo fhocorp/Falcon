@@ -1,0 +1,62 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Bonjour Visiteur&nbsp;!"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Bonjour Visiteur&nbsp;!</H1>
+<FORM ACTION="cgi-bin-dhcpcapt.html" METHOD="POST">
+EOF
+
+echo '<BASE HREF="http://'$(nvram get wifi_ipaddr)'" />'
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="formfixwidth"><TR
+TITLE="Entrez un Pseudo (court, pour IRC ou Chat etc.)">
+<TD>
+<P> Vous &ecirc;tes
+connect&eacute; sur un point d'acc&egrave;s Freifunk et b&eacute;n&eacute;ficiez
+d'un acc&egrave;s invit&eacute;. Un acc&egrave;s de type invit&eacute;
+vous permet de r&eacute;cup&eacute;rer votre courrier et de naviguer
+sur le web si les conditions d'utilisation suivantes vous semble
+acceptables. Des informations compl&eacute;mentaires sont disponibles
+<A HREF="cgi-bin-index.html"> sur la page principale de l'&eacute;quipement</A>.</P></TD>
+</TR><TR
+TITLE="Entrez un Pseudo (court, pour IRC ou Chat etc.)">
+<TD>&nbsp;</TD>
+</TR><TR
+TITLE="Entrez un Pseudo (court, pour IRC ou Chat etc.)">
+<TD><INPUT NAME="free" TYPE="CHECKBOX" VALUE="1"> Mes donn&eacute;es
+transitent en clair (non crypt&eacute;es).</TD>
+</TR><TR
+TITLE="Entrez un Pseudo (court, pour IRC ou Chat etc.)">
+<TD><INPUT NAME="fair" TYPE="CHECKBOX" VALUE="1"> Je
+me comporterai de mani&egrave;re intelligente et civilis&eacute;e en
+utilisant ce r&eacute;seau.</TD>
+</TR><TR><TD>&nbsp;</TD>
+</TR><TR><TD ALIGN="CENTER"><INPUT NAME="post_adress" TITLE="Cliquez sur le bouton Accepter si vous êtes d'accord avec les conditions." TYPE="SUBMIT" VALUE="Accepter"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+else
+if [ "$QUERY_STRING" != "${QUERY_STRING#*free=1}" ] && [ "$QUERY_STRING" != "${QUERY_STRING#*fair=1}" ]; then
+echo ok
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Conditions
+non acceptables.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

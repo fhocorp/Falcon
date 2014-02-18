@@ -1,0 +1,29 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Statistique&nbsp;: OLSR$(grep -q N7 /var/rrd/olsr-neigh.dat 2>&- && echo ' (#1)')"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Statistique&nbsp;: OLSR$(grep -q N7 /var/rrd/olsr-neigh.dat 2>&- && echo ' (#1)')</H1>
+<FORM NAME="RangeForm">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="form" CELLPADDING="0" CELLSPACING="0">
+<TBODY>
+<TR>
+<TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-4h" CHECKED="CHECKED">4 derni&egrave;res heures&nbsp;</TD>
+<TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-24h">24 derni&egrave;res heures&nbsp;</TD>
+<TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-7d">7 derniers jours&nbsp;</TD>
+<TD><INPUT NAME="START" TYPE="RADIO" VALUE="end-4w">4 derni&egrave;res semaines&nbsp;</TD>
+<TD><INPUT TYPE="SUBMIT" VALUE="Afficher"></TD>
+</TR></TBODY>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+echo "<!--"
+. /var/rrd/olsr-neigh.dat
+export N1=${N1:-none           } N2=${N2:-none           }
+export N3=${N3:-none           } N4=${N4:-none           }
+export N5=${N5:-none           } N6=${N6:-none           }
+/usr/bin/rrdcgi /www/rrd4
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

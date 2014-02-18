@@ -1,0 +1,29 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Acc&egrave;s Internet via OLSR"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>
+Acc&egrave;s Internet via OLSR</H1>
+<P>
+Si vous voyez cette page, cela signifie que votre acc&egrave;s internet a &eacute;t&eacute; bloqu&eacute; par l'op&eacute;rateur de cette passerelle. L'utilisation de l'internet &agrave; travers les r&eacute;seaux Freifunk est soumis &agrave; des conditions techniques et organisationnelles. En cas d'abus, l'op&eacute;rateur est autoris&eacute; &agrave; restreindre l'acc&egrave;s &agrave; l'internet. Pour obtenir plus d'informations, veuillez contacter l'op&eacute;rateur de cette passerelle (<A HREF="cgi-bin-contact.html">contact</A>).
+</P>
+<P>
+Les Probl&egrave;mes ou questions</B> sont d&eacute;battus sur la <A HREF="http://freifunk.net/mailinglisten">mailing-list.
+</P>
+<H2>
+Quelques liens:
+</H2>
+<UL>
+<LI>
+<A HREF="http://freifunk.net/wiki/FreifunkFirmwareEnglish">A propos du firmware Freifunk</A>
+</LI>
+<LI>
+<A HREF="http://www.olsr.org/">Qu'est-ce qu'OLSR ?
+</LI>
+</UL>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

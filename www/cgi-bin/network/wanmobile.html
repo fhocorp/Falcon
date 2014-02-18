@@ -1,0 +1,121 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Administration&nbsp;: PPPoE"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Administration&nbsp;: 3G+ / H+</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+wan_proto="$(uci get network.mobile.proto)"
+
+cat<<EOF
+<FORM ACTION="wanmobile.html" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR
+TITLE="Nom d'utilisateur fourni par votre fournisseur d'accès Internet.">
+<TD>Nom d'utilisateur&nbsp;:</TD>
+<TD><INPUT NAME="ppp_username" SIZE="48" TYPE="TEXT" VALUE="$(uci get ppp_username)"></TD>
+</TR>
+<TR
+TITLE="Mot de passe du compte Internet.">
+<TD>Mot
+de passe&nbsp;:</TD>
+<TD><INPUT NAME="ppp_passwd" SIZE="48" TYPE="PASSWORD" VALUE="$(uci get ppp_passwd)"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR
+TITLE="Option : Identifiant du pair distant, on laisse ce champ généralement vide.">
+<TD>APN :</TD>
+<TD><INPUT NAME="network.mobile.apn" SIZE="48" TYPE="TEXT" VALUE="$(uci get network.mobile.apn)"></TD>
+</TR>
+<TR
+TITLE="Physical device for 3G communication: 'vlan1' in most cases.">
+<TD>Device&nbsp;:</TD>
+<TD><INPUT MAXLENGTH="8" NAME="network.mobile.device" SIZE="48" TYPE="TEXT" VALUE="$(uci get network.mobile.device)"></TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_pppoecd" TITLE="Appliquer les paramètres. Ils seront effectifs au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler cette page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+EOF
+
+if [ -n "$(ip -f inet addr show dev 3g-mobile 2>&-)" ]; then
+eval $(ip -f inet addr show dev 3g-mobile|sed -n '
+2{
+h
+s/.*inet \+\([0-9\.]*\).*/ADDR=\1/
+p
+g
+s/.*peer \+\([0-9\.]*\).*/PEER=\1/
+p
+}
+')
+
+cat<<EOF
+<P> <B>State</B>&nbsp;:
+La connexion 3G est active. L'adresse de l'interface est $ADDR et
+l'adresse distante est $PEER.</P>
+EOF
+
+else
+
+cat<<EOF
+<P>
+<B>State</B>&nbsp;:
+La connexion 3G n'est pas active.</P>
+EOF
+
+fi
+else
+IFS=\&;set $QUERY_STRING;unset IFS;eval $*
+DIRTY=
+if [ -n "$post_pppoecd" ]; then
+for V in network.mobile.apn wan_ifname network.mobile.device wan_mtu ppp_passwd ppp_username ppp_service; do
+eval "C=\$$V"
+C=$(unescape $C)
+if [ "$C" != "$(uci get $V)" ]; then
+DIRTY=1
+uci set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+uci commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Les
+changements sont activ&eacute;s. Les param&egrave;tre seront utilis&eacute;s
+au prochain <A HREF="../reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Aucun changement dans la
+configuration.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

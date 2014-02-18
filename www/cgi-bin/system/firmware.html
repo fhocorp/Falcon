@@ -1,0 +1,190 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Mise &agrave; jour"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Mise &agrave; jour</H1>
+EOF
+
+if [ "(ro)" = "$(mount|grep " / "|if read line; then set $line;echo $6;fi)" ]; then
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+
+cat<<EOF
+<FORM ACTION="firmware.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Charger un Firmware spécifique à ce point d'accès. Si vous voulez charger un nouveau Firmware Freifunk, choisir un fichier *.bin ou un *.trx indifféremment. Pour les autres types de Firmware, choisir plutôt un fichier *.bin.">
+<TR><TD>Fichier
+Firmware&nbsp;:</TD>
+</TR><TR><TD><INPUT NAME="firmfile" SIZE="32" TYPE="FILE" VALUE="Parcourir..."></TD>
+</TR><TR><TD>&nbsp;</TD>
+</TR><TR><TD><INPUT NAME="post_firm" TITLE="Charger le fichier du Firmware. Le fichier du Firmware file va être flashé 'burned' dans la mémoire du point d'accès immédiatement." TYPE="SUBMIT" VALUE="Charger le Firmware">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<P><B>Attention</B>&nbsp;: Si
+vous d&eacute;marrer l'AP, il va &eacute;couter sur l'adresse IP
+192.168.1.1 pendant approximativement 5&nbsp;secondes pour une &eacute;ventuelle
+mise &agrave; jour du firmware par TFTP. Si le firmware venait &agrave; ne
+pas fonctionner, l'AP peut &ecirc;tre r&eacute;parer de cette mani&egrave;re.
+Connecter un PC &agrave; l'AP avec un c&acirc;ble sur l'une des 4 prises &eacute;thernet
+[1-4]. Vous pouvez aussi bien utiliser un c&acirc;ble crois&eacute; que
+plat.</P>
+<H2>Windows XP</H2>
+<OL>
+<LI>Se connecter sur le PC sur un
+compte administrateur.</LI>
+<LI>Dans
+la fen&ecirc;tre <B>Connexions r&eacute;seaux</B> s&eacute;lectionner
+la boite de dialogue <B>Connexion r&eacute;seau local</B>. Changer les
+param&egrave;tres de <B>TCP/IP internet protocole</B>.</LI>
+<LI>Changer l'adresse IP
+&agrave; <CODE>192.168.1.2</CODE>. Accepter le masque par d&eacute;faut
+de <CODE>255.255.255.0</CODE>. Laisser les autres param&egrave;tres &agrave;
+leur valeur par d&eacute;faut.</LI>
+<LI>S&eacute;lectionner
+<B>D&eacute;marrer</B>&nbsp;: <B>Programmes</B>&nbsp;: <B>Accessoires</B>&nbsp;:
+<B>Ligne de commande</B>. Se d&eacute;placer dans le r&eacute;pertoire
+qui contient le firmware &agrave; charger avec la commande <CODE>cd</CODE>.
+Exemple&nbsp;: Entrer <CODE>cd /d x:\download\firmware</CODE> et
+confirmer avec la touche Entr&eacute;e.</LI>
+<LI>Entrer
+dans le programme TFTP mais sans confirmer avec la touche Entr&eacute;e.
+Exemple&nbsp;: <CODE>tftp -i 192.168.1.1 put
+openwrt-g-freifunk-%VERSION%-fr.bin</CODE></LI>
+</OL>
+<P>Lire <A HREF="#fwtrs">Charger le Firmware</A>
+(plus loin).</P>
+<H2>Linux</H2>
+<OL>
+<LI>Ouvrir un shell root.</LI>
+<LI>Se d&eacute;placer
+dans le r&eacute;pertoire qui contient le firmware &agrave; charger avec
+la commande <CODE>cd</CODE> Exemple&nbsp;: taper <CODE>cd
+/tmp/download/firmware</CODE> et confirmer avec la touche Entr&eacute;e.</LI>
+<LI>
+Configurer
+l'interface r&eacute;seau connect&eacute;e &agrave; l'AP. Exemple&nbsp;:
+<CODE>ifconfig eth0 192.168.1.2</CODE> </LI>
+<LI>
+Lancer
+l'outil TFTP. Entrer <CODE>tftp 192.168.1.1</CODE>. Au prompt TFTP,
+vous devez entrer deux commande successivement. Entrer <CODE>binary</CODE>
+et <CODE>rexmt&nbsp;1</CODE> </LI>
+<LI> Taper
+la command TFTP upload mais ne confirmer pas tout de suite en pressant
+la touche entr&eacute;e. Exemple&nbsp;: <CODE>put
+openwrt-g-freifunk-%VERSION%-fr.bin</CODE></LI>
+</OL>
+<H2><A NAME="fwtrs">Charger le Firmware</A></H2>
+<P>La
+prise r&eacute;seau du PC normalement est &eacute;quip&eacute;e d'une LED
+de connexion. Cette LED s'allume si la connexion r&eacute;seau est UP. Apr&egrave;s
+avoir allum&eacute; l'AP, cette LED devrait s'allumer pendant quelques
+petites secondes. Sur l'AP lui m&ecirc;me, une des quatres LED devrait
+s'allumer aussi apr&egrave;s quelques secondes. V&eacute;rifier ce
+comportement avant, en d&eacute;branchant et rebranchant le c&acirc;ble
+d'alimentation du point d'acc&egrave;s. Apr&egrave;s ce test vous pouvez
+passez aux &eacute;tapes suivantes&nbsp;:</P>
+<OL>
+<LI>D&eacute;brancher
+le c&acirc;ble d'alimentation &eacute;lectrique.</LI>
+<LI>Rebrancher le c&acirc;ble
+d'alimentation &eacute;lectrique.</LI>
+<LI>Attendre
+approximativement 2&nbsp;secondes jusqu'&agrave; ce que la LED r&eacute;seau
+s'allume</LI>
+<LI>Attendre encore 1-2&nbsp;secondes.</LI>
+<LI>Confirmer
+&agrave; ce moment l&agrave; seulement l&agrave; commande upload de TFTP
+en pressant la touche Entr&eacute;e</LI>
+</OL>
+<P>Le
+chargement devrait se terminer approximativement au bout de 5&nbsp;secondes
+sans erreurs. L'AP signale la proc&eacute;dure de mise &agrave; jour en
+faisant clignoter la LED 'Power'. La proc&eacute;dure de mise &agrave;
+jour en elle m&ecirc;me devrait se terminer au bout de 2&nbsp;minutes au
+plus tard. L'AP va red&eacute;marrer automatiquement en utilisant le
+nouveau firmware.</P>
+EOF
+
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>$ffout</TD>
+</TR>
+</TABLE>
+<P>Le chargement du firmware a &eacute;t&eacute;
+annul&eacute;.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+BINMAGIC=$(dd if="$ffout" bs=4 count=1 2>/dev/null)
+case "$BINMAGIC" in
+W54G|W54S|W54A|W54s|LOAD|HDR0)
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Enregistrement
+du fichier de firmware $ffout dans la m&eacute;moire flash. Attendez
+SVP...</TD>
+</TR>
+</TABLE><IMG
+ALT="170 secondes..."
+HEIGHT="8" SRC="/images/progress170.gif" VSPACE="10" WIDTH="255" TITLE="170 secondes...">
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+setTimeout("location.href=('192.168.1.1'==location.hostname?'http://$(nvram get lan_ipaddr)/':'/')", 170000);
+//--></SCRIPT>
+EOF
+
+echo -n "<PRE>"
+firmware-burn "$ffout"
+echo "</PRE>"
+;;
+*)
+rm -f "$ffout"
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Le Firmware ne poss&egrave;de pas la
+bonne ent&ecirc;te.</TD>
+</TR>
+</TABLE>
+<P>Charger
+le fichier de firmware *.bin ou *.trx qui convient.</P>
+EOF
+
+;;
+esac
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>R&eacute;ception
+du fichier de firmware non effectu&eacute;e.</TD>
+</TR>
+</TABLE>
+<P>Chargement du Firmware annul&eacute;.</P>
+EOF
+
+fi
+else
+
+cat<<EOF
+<P>Un nouveau fimware ne
+peut-&ecirc;tre charg&eacute; qu'en mode failsafe ou en mode lecture
+seule. Sur la page de <A HREF="/cgi-bin/reset.html">red&eacute;marrage</A> s&eacute;lectionner
+l'option d&eacute;sir&eacute;e et confirmer avec <CITE>Red&eacute;marrage</CITE>.
+Charger le Firmware apr&egrave;s le red&eacute;marrage.</P>
+<P><B>Explication</B>&nbsp;:
+La commande OpenWRT <CITE>mtd</CITE> pourra r&eacute;&eacute;crire la
+partition <CITE>OpenWrt</CITE> en mode lecture &eacute;criture. En mode
+failsafe, cette partition n'est pas utilis&eacute;e. En mode lecture
+seule, cette partition sera mont&eacute;e en mode lecture seule (ro). Les
+partitions suivantes existent&nbsp;:</P>
+<PRE>$(cat /proc/mtd)</PRE>
+EOF
+
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

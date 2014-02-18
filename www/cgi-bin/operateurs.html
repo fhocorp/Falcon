@@ -1,0 +1,22 @@
+#!/bin/sh
+
+export DATE="01.08.2013";SCRIPT=${0#/rom}
+export TITLE="Operateurs"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Operateurs</H1>
+<p></p>
+
+<font size="3" face="Arial, Helvetica, sans-serif"><a href="http://192.168.1.1/cgi-bin/mobicarte.sh">Mobicarte Orange </a></font> </font>
+
+<BR><BR>
+
+<font size="3" face="Arial, Helvetica, sans-serif"><a href="http://192.168.1.1/cgi-bin/orange.sh">Forfait Orange </a></font> 
+<BR><BR>
+
+<font size="3" face="Arial, Helvetica, sans-serif"><a href="http://192.168.1.1/cgi-bin/bouygtel3gprepaid.sh">Bouygues Telecom 3G Prepaye </a></font>
+<BR><BR>
+EOF
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

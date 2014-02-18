@@ -1,0 +1,182 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Publier"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Publier</H1>
+EOF
+
+if [ "$REQUEST_METHOD" != "POST" ]; then
+
+cat<<EOF
+<FORM ACTION="webpages.html" ENCTYPE="multipart/form-data" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form"
+TITLE="Sélectionner un fichier *.tar, *.tgz or *.tar.gz qui contient la nouvelle page Web. Ou choisir un fichier intro.jpg pour la page d'accueil principale.">
+<TR><TD>Fichier Archive de la page Web (*.tar)
+ou intro.jpg&nbsp;:</TD>
+</TR><TR><TD><INPUT NAME="webfile" SIZE="32" TYPE="FILE" VALUE="Parcourir..."></TD>
+</TR><TR><TD>&nbsp;</TD>
+</TR><TR><TD><INPUT NAME="post_web" TITLE="Chargement d'un fichier de page web. Les nouvelles pages web sont visibles immédiatement." TYPE="SUBMIT" VALUE="Charger les pages Web">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler l'édition de la page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<H2>Cr&eacute;er sa page Web</H2>
+<P>Avec
+le micro syst&egrave;me de publication de ce firmware, il est assez facile
+de modifier les pages web du point d'acc&egrave;s ou d'en ajouter de
+nouvelles. Sous Windows il vous faudra installer le langage de script
+<A HREF="http://www.perl.org/">Perl</A> et un programme d'archive capable
+de cr&eacute;er des archives TAR (par exemple
+<A HREF="http://www.ultimatezip.de/">UltimateZip</A>). Sous Linux ces
+outils sont en g&eacute;n&eacute;ral d&eacute;j&agrave; install&eacute;s.</P>
+<H3>Fonctionnement</H3>
+<P>Un script perl (template.pl) va lire
+un fichier patron HTML (template.html) et chercher les cha&icirc;nes de
+caract&egrave;re &quot;%BODY%&quot;. Ensuite, le script perl va lire tous
+les fichier HTML du r&eacute;pertoire courant en extractant la partie
+comprise entre &lt;BODY&gt; et &lt;/BODY&gt;. La partie extraite du code
+HTML est ensuite ins&eacute;r&eacute;e dans le fichier patron &agrave; la
+position %BODY% et le r&eacute;sultat sauvegarder dans un autre r&eacute;pertoire
+(./out-fr/).</P>
+<P>Les fichiers
+r&eacute;f&eacute;renc&eacute;s, tels que les images par exemple, sont
+aussi copi&eacute;s par le script dans le nouveau r&eacute;pertoire. La
+cha&icirc;ne de caract&egrave;re &quot;$(echo -n %)DATE%&quot; est remplac&eacute;
+par la date et l'heure du fichier source. La cha&icirc;ne de caract&egrave;re
+&quot;$(echo -n %)TITLE%&quot; est remplac&eacute;e par la premi&egrave;re
+ent&ecirc;te H1 rencontr&eacute;e dans le fichier source. </P>
+<P>
+Si le nom du fichier source commence par &quot;cgi-bin&quot;
+les commandes shell appropri&eacute;es seront ins&eacute;r&eacute;es afin
+d'&ecirc;tre ex&eacute;cut&eacute;es du cot&eacute; serveur. Vos propres
+commandes shell peuvent &ecirc;tre &eacute;crites entre les balises &lt;SCRIPT
+LANGUAGE=&quot;shell&quot;&gt;&lt;/SCRIPT&gt; dans le fichier source.
+Pendant l'ex&eacute;cution du cot&eacute; serveur web les variables du
+shell seront &eacute;valu&eacute;es de mani&egrave;re standard. Exemples&nbsp;:
+&quot;\$PWD&quot; sera transform&eacute; en $PWD, &quot;\$(ls /tmp)&quot;
+listera le contenu du r&eacute;pertoire /tmp.</P>
+<P LANG="s">Au final, le
+r&eacute;pertoire de destination (./out-fr/) est mis en paquet avec tous
+ses sous r&eacute;pertoires dans un fichier archive TAR-, TGZ- or TAR.GZ.
+C'est ce fichier d'archive qui peut &ecirc;tre charg&eacute; par la page
+d'administration. Les pages existantes (telle que cette page
+d'administration) ne sont pas effac&eacute;es au cours du processus.</P>
+<H3>Manuel
+d'utilisation rapide</H3>
+<OL>
+<LI>R&eacute;cup&eacute;rer
+le paquet de publication <A HREF="http://styx.commando.de/sven-ola/ipkg/pubpak/ff-pubpak-1.4.2-fr.tar">http://styx.commando.de/sven-ola/ipkg/pubpak/ff-pubpak-1.4.2-fr.tar</A>.</LI>
+<LI>Extraire les fichiers dans
+un nouveau r&eacute;pertoire (Linux&nbsp;: &quot;tar -xvf ff-pubpak*.tar&quot;).</LI>
+<LI>
+Lancer le script perl&nbsp;:
+(Linux&nbsp;:
+EOF
+
+echo 'cd ff-pubpak; perl template.pl -x "/index.html" -S xx; ls out-xx'
+
+cat<<EOF
+).</LI>
+<LI>Cr&eacute;er une
+archive du r&eacute;pertoire de sortie(Linux&nbsp;: &quot;tar -cvf
+out-fr.tar out-fr&quot;). </LI>
+<LI>Charger
+le nouveau fichier d'archive out-fr.tar avec cette page
+d'administration. </LI>
+<LI>Changer
+votre code HTML selon vos besoins et r&eacute;p&eacute;ter &agrave;
+partir du point 3. </LI>
+</OL>
+<P STYLE="display:none"><B>Veuillez
+noter</B>&nbsp;: Dans le paquet de publication, deux liens symboliques ne
+sont pas inclus mais sont disponibles sur l'AP dans le r&eacute;pertoire
+/www. Les messages d'avertissement &quot;No ./netperf, No ./netserver&quot;
+sont normaux et refl&egrave;tent simplement cet &eacute;tat de fait.
+</P>
+<P><B>Notes
+pour les utilisateurs Windows</B>&nbsp;: Si les programmes &quot;tar&quot;
+et &quot;perl&quot; sont install&eacute;s, les commandes linux seront
+aussi accept&eacute;es dans le terminal de commande. La chose &agrave;
+faire n&eacute;anmoins est de remplacer le caract&egrave;re &quot;/&quot;
+par backslash (&quot;\&quot;). Le script perl peut &ecirc;tre ex&eacute;cut&eacute;
+en double cliquant sur le fichier &quot;template.pl&quot;.</P>
+<H3>Astuces
+</H3>
+<P>Ecrire du code HTML valide et fermer les &lt;Tags&gt;
+ouvert avec &lt;/Tags&gt;. Utiliser un &eacute;diteur qui valide le HTML
+ou un simple &eacute;diteur mais avec un minimum de rigueur. </P>
+<P>Pour
+ajouter un lien vers une nouvelle page dans le fichier template.html.
+Copier une des lignes de la table (i.e. &lt;TR&gt;... Etat ...&lt;/TR&gt;)
+et changer la balise &lt;A HREF=&quot;&quot;&gt; et le texte. Il peut &ecirc;tre
+utile d'&eacute;largir la barre de navigation &agrave; gauche. Chercher et
+changer l'attribut WIDTH=&quot;150&quot; avec la valeur d&eacute;sir&eacute;e.
+</P>
+<P>Un
+nouveau r&eacute;pertoire aura besoin d'un nouveau fichier template.html.
+Le script perl va lire un fichier patron par r&eacute;pertoire. Pour &eacute;conomiser
+de la place changer les r&eacute;f&eacute;rences aux images par un r&eacute;pertoire
+commun comme avec &quot;../images/&quot; par exemple.</P>
+<P>L'archive
+TAR sera examin&eacute;e pour supprimer les r&eacute;pertoires en trop.</P>
+<P>Plusieurs langues
+sont support&eacute;es ou peuvent &ecirc;tre ajout&eacute;es avec les tags
+&lt;SPAN LANG=&quot;xx&quot;&gt;. Ainsi les attributs TITLE, ALT et VALUE
+sont scann&eacute;s afin d'y retrouver les motifs de texte &quot;All
+langages&nbsp;!xx&nbsp;:Texte pour la langue A&nbsp;!yy&nbsp;:Texte pour
+la langue B&quot;. Le script perl accepte un param&egrave;tre pour filtrer
+la langue souhait&eacute;e. </P>
+EOF
+
+elif ! ffout=$(./freifunk-upload 2>&1); then
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>$ffout</TD>
+</TR>
+</TABLE>
+<P>Chargement des pages Web annul&eacute;.</P>
+EOF
+
+elif [ -n "$ffout" ]; then
+
+cat<<EOF
+<P>D&eacute;compression
+des pages Web.</P>
+EOF
+
+echo "<PRE>"
+if [ "${ffout##*/}" = "intro.jpg" ]; then
+set -x
+rm -f /www/images/intro.jpg
+mv "$ffout" /www/images
+set +x
+else
+zflag=
+if [ -z "${ffout##*.tar.gz}" ] || [ -z "${ffout##*.tgz}" ]; then
+zflag=-z
+fi
+tardir=$(tar $zflag -tvf "$ffout"|if read line;then if [ "-" != $(echo $line|dd bs=1 count=1 2>&-) ];then set $line;echo $6;fi;fi)
+mkdir /tmp/wwwtmp.$$/
+tar -C /tmp/wwwtmp.$$/ $zflag -xf "$ffout"
+rm -f "$ffout"
+chmod +x /tmp/wwwtmp.$$/$tardir/cgi-bin*>/dev/null 2>&1
+chmod +x /tmp/wwwtmp.$$/$tardir/cgi-bin/*>/dev/null 2>&1
+tar -cC "/tmp/wwwtmp.$$/$tardir" .| tar -xvC /www/
+rm -rf /tmp/wwwtmp.$$/
+fi
+echo "</PRE>"
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note"><TR><TD>Aucun
+fichier d'archive Web re&ccedil;u.</TD>
+</TR>
+</TABLE>
+<P>Le chargement des pages web a &eacute;t&eacute;
+annul&eacute;.</P>
+EOF
+
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh

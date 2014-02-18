@@ -1,0 +1,226 @@
+#!/bin/sh
+
+export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export TITLE="Administration&nbsp;: Syst&egrave;me"
+. ${SCRIPT%/*}/cgi-bin-pre.sh
+
+cat<<EOF
+<H1>Administration&nbsp;: Syst&egrave;me</H1>
+EOF
+
+if [ "$REQUEST_METHOD" = "POST" ]; then
+read QUERY_STRING
+fi
+if [ -z "$QUERY_STRING" ]; then
+#Speedups
+ff_dnsmasq="$(nvram get ff_dnsmasq)"
+ff_mini_fo="$(nvram get ff_mini_fo)"
+ff_nonetmsg="$(nvram get ff_nonetmsg)"
+wl0_country_code="$(nvram get wl0_country_code)"
+ff_tz="$(nvram get ff_tz)"
+test -z "$ff_tz" && ff_tz="MET-1MEST-2,M3.3.0,M10.5.0"
+
+cat<<EOF
+<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript"><!--
+function validate(obj) {
+old_mini_fo=$(nvram get ff_mini_fo)
+for(var i = 0; i < obj.ff_mini_fo.length; i++) {
+if (obj.ff_mini_fo[i].checked) {
+new_mini_fo=obj.ff_mini_fo[i].value;
+}
+}
+if (('1'==old_mini_fo) != ('1'==new_mini_fo)) {
+var ask = 'mini_fo='+new_mini_fo+' reformats JFFS2. Enter OK.';
+if ('fr'=='de') ask = 'mini_fo='+new_mini_fo+' formatiert JFFS2. OK eingeben.';
+return 'OK' == prompt(ask, '');
+}
+return true;
+}
+--></SCRIPT>
+<FORM ACTION="system.html" ID="systemform" METHOD="POST">
+<TABLE CLASS="shadow0" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow1" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE CLASS="shadow2" CELLPADDING="0" CELLSPACING="0"><TR><TD><TABLE BORDER="0" CLASS="form">
+<TR
+TITLE="C'est avec ce nom que le point d'accès peut être joint. Ce nom sera utilisé au prompt de ligne de commande.">
+<TD>Nom
+d'h&ocirc;te&nbsp;:</TD>
+<TD><INPUT NAME="wan_hostname" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wan_hostname)"></TD>
+</TR>
+<TR
+TITLE="Example de latitude : 52.5215. Elle peut être trouvée sur http://www.maporama.com/ (Bottom left on the answer page).">
+<TD>Latitude&nbsp;:</TD>
+<TD><INPUT NAME="ffw_adm_lat" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ffw_adm_lat)"></TD>
+</TR>
+<TR
+TITLE="Example de longitude : 13.4078. Elle peut être trouvée sur http://www.maporama.com/ (Bottom left on the answer page).">
+<TD>Longitude&nbsp;:</TD>
+<TD><INPUT NAME="ffw_adm_lon" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ffw_adm_lon)"></TD>
+</TR>
+<TR
+TITLE="Les machines Internet à l'intérieur de ce nom de domaine seront considérées comme des machines internes au réseau. Utiliser un nom qui n'est pas occupé officiellement sur le Net.">
+<TD>Nom de domaine&nbsp;:</TD>
+<TD><INPUT NAME="wan_domain" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wan_domain)"></TD>
+</TR>
+<TR
+TITLE="Les requêtes DNS seront relayées à cette adresse IP. Si ce champ est vide l'adresse pré-configurée est utilisée. Séparer les adresses DNS par des points virgules.">
+<TD>Serveur
+DNS&nbsp;:</TD>
+<TD><INPUT NAME="wan_dns" SIZE="48" TYPE="TEXT" VALUE="$(nvram get wan_dns)">
+EOF
+
+if [ -x /etc/init.d/S*dnsmasq ];then
+
+cat<<EOF
+</TD>
+</TR>
+
+
+<TR
+TITLE="Désactive dnsmask (démon DNS+DHCP). Permet d'économiser de la mémoire.">
+<TD>Start DNS/DHCP Server&nbsp;:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_dnsmasq" TYPE="RADIO" VALUE="1"$(if [ "$ff_dnsmasq" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;
+<INPUT CLASS="radio" NAME="ff_dnsmasq" TYPE="RADIO" VALUE="0"$(if [ "$ff_dnsmasq" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;
+EOF
+
+fi
+
+cat<<EOF
+</TD>
+</TR>
+<TR
+TITLE="Use the mini_fo fanout file system instead of symbolic links. Saves space in JFF2, but may have bugs. Activated by default only on devices with 2Mb flash. Restart with format necessary.">
+<TD>Use mini_fo&nbsp;:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_mini_fo" TYPE="RADIO" VALUE="1"$(if [ "$ff_mini_fo" != "0" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;
+<INPUT CLASS="radio" NAME="ff_mini_fo" TYPE="RADIO" VALUE="0"$(if [ "$ff_mini_fo" = "0" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;
+</TD>
+</TR>
+<TR
+TITLE="Additional source line for /etc/ipkg.conf. Example : 'src mynet http://download.mynet.org/packs'.">
+<TD>IPK Source&nbsp;:</TD>
+<TD><INPUT NAME="ff_ipkg" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_ipkg)">
+</TD>
+</TR>
+<TR
+TITLE="Starting the device is announced with an UDP message on all LAN/WAN jacks. In rare occasion, the short time bridge configuration between LAN and WAN may hang the device.">
+<TD>Network
+start messages&nbsp;:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_nonetmsg" TYPE="RADIO" VALUE="0"$(if [ "$ff_nonetmsg" != "1" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;
+<INPUT CLASS="radio" NAME="ff_nonetmsg" TYPE="RADIO" VALUE="1"$(if [ "$ff_nonetmsg" = "1" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;
+</TD>
+</TR>
+<TR
+TITLE="Activer le WebAdmin sur toutes les interfaces.">
+<TD>Activer
+le WebAdmin&nbsp;:</TD>
+<TD><INPUT CLASS="radio" NAME="ff_unsecure_webadmin" TYPE="RADIO" VALUE="1"$(if [ "$ff_unsecure_webadmin" = "1" ];then echo ' checked="checked"';fi)>Activ&eacute;&nbsp;
+<INPUT CLASS="radio" NAME="ff_unsecure_webadmin" TYPE="RADIO" VALUE="0"$(if [ "$ff_unsecure_webadmin" != "1" ];then echo ' checked="checked"';fi)>D&eacute;sactiv&eacute;
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2">&nbsp;</TD>
+</TR>
+<TR
+TITLE="Fixe la variable d'environnement TZ, qui est utilisée pour afficher correctement la date système. En Europe Centrale on peut utiliser la valeur par défaut 'MET-1MEST-2,M3.3.0,M10.5.0'.">
+<TD>Fuseau Horaire&nbsp;:</TD>
+<TD><INPUT NAME="ff_tz" SIZE="48" TYPE="TEXT" VALUE="$ff_tz"> </TD>
+</TR>
+<TR
+TITLE="Fixe le pays d'utilisation pour déterminer les fréquences radio autorisées.">
+<TD>
+EOF
+
+if wl country >&- 2>&-;then
+
+cat<<EOF
+Pays&nbsp;:</TD>
+<TD><SELECT NAME="wl0_country_code" STYLE="width:100%">
+<OPTION>Pas encore configur&eacute;</OPTION>
+$(wl country list|sed -ne '2,$ {s/[^ 	]\+/<OPTION VALUE="&">& -/;s/="'${wl0_country_code%% *}'"/& SELECTED="SELECTED"/;s/.$/&<\/OPTION>/;p}')</SELECT></TD>
+</TR>
+<TR
+TITLE="Parameters for loading the WLAN driver module, e.g. 'countrycode=276'.">
+<TD>
+EOF
+
+else
+
+cat<<EOF
+WLAN Module Parameters&nbsp;:</TD>
+<TD><INPUT NAME="ff_ath_param" SIZE="48" TYPE="TEXT" VALUE="$(nvram get ff_ath_param)">
+</TD>
+</TR>
+<TR>
+<TD COLSPAN="2">
+EOF
+
+fi
+
+cat<<EOF
+&nbsp;</TD>
+</TR>
+<TR>
+<TD COLSPAN="2"><INPUT NAME="post_system" ONCLICK="return validate(systemform);" TITLE="Appliquer les paramètres. Ils seront effectifs au prochain redémarrage." TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Annuler cette page." TYPE="SUBMIT" VALUE="Annuler"></TD>
+</TR>
+</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
+<P>
+<B>Astuce</B>&nbsp;:
+Pour assurer une connexion efficace au r&eacute;seau, vous pouvez fixer le
+<B>Nom d'h&ocirc;te</B> (un nom simple sans espace ni point) et le <B>Nom
+de Domaine</B> interne(plusieurs nom s&eacute;par&eacute;s par des
+points). Exemple&nbsp;: si vous fixez <B>Nom d'h&ocirc;te</B> &agrave; &quot;monwrt&quot;
+et <B>Nom de Domaine</B> &agrave; &quot;monreseau.freifunk.net&quot;, il
+va &ecirc;tre alors possible de d'appeler les pages web de cet AP avec
+cette adresse <A HREF="http://monwrt.myreseau.freifunk.net/">http://monwrt.monreseau.freifunk.net/</A>
+et aussi directement par <A HREF="http://monwrt/">http://monwrt/</A>.</P>
+EOF
+
+else
+IFS=\&;set ${QUERY_STRING%%[^%&=+-:@-_a-z~]*};unset IFS;eval $*
+DIRTY=
+if [ -n "$post_system" ]; then
+ff_reset=$(nvram get ff_reset)
+old_mini_fo=$(nvram get ff_mini_fo)
+if [ "0" != "$old_mini_fo" ] && [ "0" = "$ff_mini_fo" ]; then
+ff_reset=format
+elif [ "0" = "$old_mini_fo" ] && [ "0" != "$ff_mini_fo" ]; then
+ff_reset=format
+fi
+wl country >&- 2>&- && add="wl0_country_code" || add="ff_ath_param"
+test -x /etc/init.d/S*dnsmasq && add="$add ff_dnsmasq"
+wan_hostname=$(echo $wan_hostname|sed -e "s/[^a-z0-9A-Z\-]/_/g")
+for V in $add wan_dns wan_hostname ffw_adm_lat ffw_adm_lon wan_domain ff_mini_fo ff_reset ff_nonetmsg ff_unsecure_webadmin ff_ipkg ff_tz; do
+eval "C=\$$V"
+C=$(httpd -d "$C")
+if [ "$C" != "$(nvram get $V)" ]; then
+DIRTY=1
+nvram set $V="$C"
+fi
+done
+fi
+if [ -n "$DIRTY" ]; then
+nvram commit>/dev/null 2>&1
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Les
+changements sont activ&eacute;s. Les param&egrave;tre seront utilis&eacute;s
+au prochain <A HREF="/cgi-bin/reset.html">Red&eacute;marrage</A>.</TD>
+</TR>
+</TABLE>
+EOF
+
+else
+
+cat<<EOF
+<TABLE BORDER="0" CLASS="note">
+<TR>
+<TD>Aucun changement dans la
+configuration.</TD>
+</TR>
+</TABLE>
+EOF
+
+fi
+fi
+
+. ${SCRIPT%/*}/cgi-bin-post.sh
