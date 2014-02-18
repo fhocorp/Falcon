@@ -31,7 +31,8 @@ config interface 'hotspot'
 	option auto '1'
 	option type 'bridge'
 	option stp '1'
-
+	option macaddr '00:18:39:62:45:ad'
+	
 config interface 'tunnel'
 	option proto 'none'
 	option ifname 'tun0'
