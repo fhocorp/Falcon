@@ -14,13 +14,7 @@ cat<<EOF
 <TD>Hops
 EOF
 
-SED=$(cat /etc/hosts|sed -ne 's/[ 	]*#.*//;/^[0-9]/{s/^\([^ 	]\+\)[ 	]\+\([^ 	]\+\)$/s\/^\1$\/\2\//;p}')
-IFS='|'
-cat /var/run/services_olsr|sed -ne 's/^#.*//;s/	*#/|/;/./p'|while read l;do
-set $l
-echo "</tr><tr><td><a href=\"$1\">$3</a></td><td><a href=\"http://$4\">$(echo $4|sed -e "$SED")</a></td><td>$2</td><td>$(ip route ls|grep "^$4 via"|cut -d' ' -f8)</td>"
-done
-unset IFS
+
 
 cat<<EOF
 </TD>

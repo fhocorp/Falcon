@@ -1,14 +1,53 @@
 #!/bin/sh
 
-export DATE="xx.xx.xxxx";SCRIPT=${0#/rom}
+export DATE="26.02.2014";SCRIPT=${0#/rom}
 export TITLE="Services"
 . ${SCRIPT%/*}/cgi-bin-pre.sh
 
 cat<<EOF
 <H1>Services</H1>
-<P>Cette partie vous permet d'acc&eacute;der aux pages de configurations des diff&eacute;rent services install&eacute;s sur votre routeur.<BR>
-La page <B>OLSR</B> permet de configurer le routage OLSR dans le cas d'un r&eacute;seau maill&eacute;. La page <B>Passerelle</B> vous permet de limiter la bande passante utilis&eacute;e par les clients wifi.</P>
-<P>Cette partie accueil &eacute;galement les pages de configuration que vous pouvez &eacute;ventuellement ajouter par l'installation de paquets ipk.</P>
+<P>Cette page vous affiche l'etat des diff&eacute;rent services install&eacute;s sur votre routeur.<BR>
+
+
+<TABLE BORDER="1" CELLPADDING="0" CELLSPACING="0" CLASS="shadow0">
+<TR>
+<TH>Service</TH>
+<TH>Statut</TH>
+</TR>
+
+<TR>
+<TD>Internet</TD>
+<TD>$(test -n "$(nslookup serveur-web.org)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.png">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.png">')</TD>
+</TR>
+
+<TR>
+<TD>VoIP</TD>
+<TD>$(test -n "$()" &&
+echo '<IMG ALT="OK" SRC="/images/yes.png">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.png">')</TD>
+</TR>
+
+<TR>
+<TD>TV</TD>
+<TD>$(test -n "$(nslookup 195.154.109.235)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.png">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.png">')</TD>
+</TR>
+
+<TR>
+<TD>Hotspot</TD>
+<TD>$(test -n "$(ifconfig tun1)" &&
+echo '<IMG ALT="OK" SRC="/images/yes.png">' ||
+echo '<IMG ALT="Not OK" SRC="/images/no.png">')</TD>
+</TR>
+
+
+</TABLE>
+
+</P>
+<P></P>
 <NOSCRIPT>
 <TABLE BORDER="0" CLASS="note">
 <TR>
@@ -16,6 +55,9 @@ La page <B>OLSR</B> permet de configurer le routage OLSR dans le cas d'un r&eacu
 de Javascript est n&eacute;cessaire pour recharger automatiquement la
 page de d&eacute;marrage pendant un <A HREF="reset.html">Red&eacute;marrage</A>.</TD>
 </TR>
+
+
+
 </TABLE></NOSCRIPT>
 <P><B>Astuce</B>&nbsp;:
 Appuyer sur <KBD STYLE="text-decoration: blink;">[F1]</KBD> ou d&eacute;placer

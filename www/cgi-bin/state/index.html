@@ -260,7 +260,7 @@ cat<<EOF
 EOF
 
 fi
-WLMASK=$(ip -f inet addr show dev $WLDEV label $WLDEV |sed -ne'2{s# \+inet \([0-9\.\/]\+\).*#\1#;p}')
+WLMASK=$(uci get network.lan.netmask)
 
 cat<<EOF
 </TD>
@@ -270,16 +270,17 @@ cat<<EOF
 </TR>
 <TR>
 <TD>Adresse IP&nbsp;:</TD>
-<TD>IP:&nbsp;$(ip -f inet addr show dev $WLDEV label $WLDEV |sed -ne'2{s/ \+inet \([0-9\.]\+\).*/\1/;p}'),
+<TD>IP:&nbsp;$(uci get network.lan.ipaddr),
 Masque
-sous r&eacute;seau:&nbsp;$(test -n "$WLMASK" && ipcalc -m $WLMASK|cut -d'=' -f2),
+sous r&eacute;seau:&nbsp;$(uci get network.lan.netmask),
 MAC:&nbsp;$(ip link show dev $WLDEV|sed -ne'2{s/.*ether \+\([^ ]\+\).*/\1/;p}')</TD>
 </TR>
 <TR>
 <TD>Etat
 sans fil&nbsp;:</TD>
 <TD>
-$(/usr/sbin/wl -i $WLDEV status 2>&1)</TD>
+$(/usr/sbin/wl -i $WLDEV status 2>&1)<BR></BR>
+$(/usr/sbin/wl -i wl0 status 2>&1)</TD>
 </TR>
 <TR>
 <TD>Temps de fonctionnement&nbsp;:</TD>
@@ -288,7 +289,7 @@ $(/usr/sbin/wl -i $WLDEV status 2>&1)</TD>
 <TR>
 <TD>Informations
 sur l'AP&nbsp;:</TD>
-<TD>Boardtype: $(nvram get boardtype), Boardnum: $(nvram get boardnum)
+<TD>Boardtype: $(uci get wireless.wl0.type), Boardnum: $(nvram get boardnum)
 EOF
 
 if [ "$ff_httpinfo" != "0" ];then

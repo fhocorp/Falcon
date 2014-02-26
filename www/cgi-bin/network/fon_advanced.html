@@ -10,9 +10,15 @@ cat<<EOF
 </P>
 <P>Merci de noter que uniquement les membres Serveur WEB et disposant d'un pass de connexion pourront se connecter à votre hotspot.
 </P>
-<br>
-</br>
-<TR><TD><B>Postes connectés: </B></TD><TD>$(chilli_query list)</TD></TR>
+
+EOF
+
+cat<<EOF
+<H1>Postes connectés: </H1>
+
+
+<PRE>$(cd /
+./list.sh)</PRE>
 
 EOF
 

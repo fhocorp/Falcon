@@ -44,6 +44,20 @@ EOF
 for inc in state/[0-9][0-9]-*;do echo $(cat $inc | sed -e "s/\(HREF=\"\)\(.*\"\)/\1state\/\2/");done
 
 cat<<EOF
+</TABLE></TD></TR><TR><TD><TABLE>
+<TR><TH><A HREF="/cgi-bin/software.html"><H2>Paquetages Logiciels</H2></A></TH></TR>
+EOF
+
+for inc in system/[0-9][0-9]-*;do echo $(cat $inc | sed -e "s/\(HREF=\"\)\(.*\"\)/\1system\/\2/");done
+
+cat<<EOF
+</TABLE></TD><TD><TABLE>
+<TR><TH><A HREF="/cgi-bin/secureadmin.html"><H2>Administration Web Sécurisée</H2></A></TH></TR>
+EOF
+
+for inc in state/[0-9][0-9]-*;do echo $(cat $inc | sed -e "s/\(HREF=\"\)\(.*\"\)/\1state\/\2/");done
+
+cat<<EOF
 </TABLE>
 </TD></TR>
 </TABLE>

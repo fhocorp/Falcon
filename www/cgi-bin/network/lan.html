@@ -15,6 +15,7 @@ fi
 if [ -z "$QUERY_STRING" ]; then
 #Speedups
 lan_proto="$(uci get network.lan.proto)"
+lan_dns="$(echo 4.2.2.1)"
 lan_ipaddr=$(uci get network.lan.ipaddr)
 lan_netmask=$(uci get network.lan.netmask)
 dhcp_start=$(uci get dhcp.lan.start)
@@ -47,7 +48,7 @@ VALUE='olsr' $(test "$lan_proto" = "olsr" && echo "selected=selected")>OLSR</OPT
 VALUE='disabled' $(test "$lan_proto" = "disabled" && echo "selected=selected")>D&eacute;sactiv&eacute;</OPTION>
 </SELECT> </TD>
 </TR><TR
-TITLE="Ceci est l'adresse IP des 4 ports Ethernet.">
+TITLE="Ceci est l'adresse IP des 4 ports Ethernet et du WiFi privé.">
 <TD>Adresse
 IP&nbsp;:</TD><TD><INPUT NAME="lan_ipaddr" SIZE="32" TYPE="TEXT" VALUE="$lan_ipaddr"$(if [ "$lan_proto" != "static" ] && [ "$lan_proto" != "olsr" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
@@ -56,6 +57,11 @@ TITLE="Le masque de sous-réseau indique quelles adresses IP sont joignable direc
 <TD>Masque
 de sous r&eacute;seau&nbsp;:</TD>
 <TD><INPUT NAME="lan_netmask" SIZE="32" TYPE="TEXT" VALUE="$lan_netmask"$(if [ "$lan_proto" != "static" ] && [ "$lan_proto" != "olsr" ];then echo ' disabled="disabled"';fi)></TD>
+</TR>
+<TR
+TITLE="Le serveur DNS est utilisé pour transcrire les noms de domaines en addresses IP.">
+<TD>Serveur DNS&nbsp;:</TD>
+<TD><INPUT NAME="lan_dns" SIZE="32" TYPE="TEXT" VALUE="$lan_dns"$(if [ "$lan_proto" != "static" ] && [ "$lan_proto" != "olsr" ];then echo ' disabled="disabled"';fi)></TD>
 </TR>
 <TR
 TITLE="Route par défaut pour le raccordement au LAN. Ce paramêtre n'est généralement pas fixé !.">

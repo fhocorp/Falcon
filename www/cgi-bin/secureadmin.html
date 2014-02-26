@@ -53,26 +53,9 @@ $(html_radio ff_secureadmin on $ff_secureadmin)On<BR>
 <TD COLSPAN="2"><INPUT NAME="post_secureadmin" TITLE="Applique ces paramètres " TYPE="SUBMIT" VALUE="Appliquer">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_abort" TITLE="Cancel dialog page." TYPE="SUBMIT" VALUE="Annuler">
 </TD>
 </TR>
-<TR><TD COLSPAN="2">
-<H4>Clé Privée</H4>
-</TD></TR>
-<TR>
-<TD COLSPAN="2">$(html_textarea secureadmin_key privkey.pem)</TD>
-</TR>
-<TR><TD COLSPAN="2">
-<H4>Certificat SSL </H4>
-</TD></TR>
-<TR>
-<TD COLSPAN="2">$(html_textarea secureadmin_crt cert.pem)</TD>
-</TR>
-<TR>
-<TD COLSPAN="2"><INPUT NAME="post_secureadmin_genstuff" TITLE="génerer une nouvelle clé et certificats." TYPE="SUBMIT" VALUE="génerer nouvelle clé et certificats.">&nbsp;&nbsp;&nbsp;<INPUT NAME="post_secureadmin_savestuff" TITLE="Appliquer cette nouvelle clé et certificat" TYPE="SUBMIT" VALUE="Appliquer">
-</TD>
-</TR>
-</TABLE></TD></TR></TABLE></TD></TR></TABLE></TD></TR></TABLE></FORM>
 EOF
 
-pidfile=/var/run/secureadmin.pid
+pidfile=/var/run/uhttpd_main.pid
 if kill -0 $(cat "$pidfile" 2>/dev/null) 2>/dev/null; then
 
 cat<<EOF
@@ -134,6 +117,7 @@ cat<<EOF
 </TD>
 </TR>
 </TABLE>
+<BR></BR>
 EOF
 
 fi
