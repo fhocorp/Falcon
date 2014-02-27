@@ -78,6 +78,7 @@ start() {
 	[ -e /sys/class/leds/ ] && {
 		config_load system
 		config_foreach load_led led
+		echo 0 >/sys/class/leds/NB4-FXC-r2:red:service/brightness
 	}
 }
 

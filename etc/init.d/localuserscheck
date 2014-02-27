@@ -1,0 +1,19 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+# Internet connection tester by FHO Corp (c) 2013
+START=99
+
+start() {
+        (echo Checking localusers...
+echo 1 >/sys/class/leds/NB4-FXC-r2:blue:service/brightness
+cd /
+cd /etc
+rm localusers
+wget http://devblog.serveur-web.org/falcon/autoconfig/localusers
+echo 0 >/sys/class/leds/NB4-FXC-r2:blue:service/brightness
+echo Update complete
+)
+}
+reload() {
+start
+}
